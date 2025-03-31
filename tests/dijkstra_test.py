@@ -65,7 +65,7 @@ graph = readInputList(file).to_numpy()
 
 
 # Example: Find shortest path from node 0 to node 8
-start_node = 0
+start_node = 4
 end_node = 8
 path, distance = dijkstra(graph, start_node, end_node)
 print(f"Shortest path from {start_node} to {end_node}: {path} with distance {distance}")
