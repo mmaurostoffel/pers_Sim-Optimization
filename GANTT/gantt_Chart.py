@@ -23,13 +23,13 @@ Ende Master 25.Juli
 
 # Sample task data with (Task Name, Start Date, End Date)
 tasks = [
-    ("Resultat/Doku", "6-7-2025", "25-7-2025"),
-    ("Test Endprodukt", "15-6-2025", "5-7-2025"),
-    ("Endprodukt", "8-6-2025", "14-6-2025"),
-    ("Test Path-Finding", "1-6-2025", "7-6-2025"),
-    ("Path-Finding", "25-5-2025", "31-5-2025"),
-    ("Adjazenzmatrizen", "18-5-2025", "24-5-2025"),
-    ("Ausgangslagen", "11-5-2025", "17-5-2025"),
+    ("Resultat/Doku", "5-7-2025", "25-7-2025"),
+    ("Test Endprodukt", "14-6-2025", "5-7-2025"),
+    ("Endprodukt", "7-6-2025", "14-6-2025"),
+    ("Test Path-Finding", "31-5-2025", "7-6-2025"),
+    ("Path-Finding", "24-5-2025", "31-5-2025"),
+    ("Adjazenzmatrizen", "17-5-2025", "24-5-2025"),
+    ("Ausgangslagen", "10-5-2025", "17-5-2025"),
     ("Zellautomat", "5-5-2025", "10-5-2025"),
 ]
 # Convert string dates to datetime objects
@@ -44,15 +44,18 @@ fig, ax = plt.subplots(figsize=(10, 5))
 # Plot tasks
 y_pos = range(len(tasks))
 for i, (task, start, end) in enumerate(tasks):
-    ax.barh(task, (end - start).days, left=start, color='skyblue', edgecolor='black')
+    p = ax.barh(task, (end - start).days, left=start, color='skyblue', edgecolor='black')
+    ax.bar_label(p, label_type='center')
 
 # Format x-axis
 ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))  # Tick every 5 days
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+ax.axvline(str_to_date("25-7-2025"), color='red', linestyle="--", linewidth=2, label="Ende Master")
+
 plt.xticks(rotation=45)
-plt.xlabel("Date")
-plt.ylabel("Tasks")
-plt.title("Gantt Chart Example")
+plt.xlabel("Datum")
+plt.ylabel("Meilensteine")
+plt.title("Meilensteine Masterarbeit")
 plt.grid(axis='x', linestyle='--', alpha=0.7)
 
 plt.tight_layout()
