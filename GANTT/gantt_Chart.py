@@ -55,7 +55,7 @@ plt.text(str_to_date("14-7-2025"),6.5,"Meilenstein 3:\nEnde Master\n", c='r')
 ax.axvline(str_to_date("07-06-2025"), color='red', linestyle="--", linewidth=2, label="Abschluss der Zellautomaten")
 plt.text(str_to_date("08-06-2025"),6.5,"Meilenstein 2:\nAbschluss des \nPath-Finding", c='r')
 ax.axvline(str_to_date("24-05-2025"), color='red', linestyle="--", linewidth=2, label="Abschluss des Path-Finding")
-plt.text(str_to_date("25-05-2025"),6.5,"Meilenstein 1:\nAbschluss der \nZellautomaten", c='r')
+plt.text(str_to_date("25-05-2025"),6.5,"Meilenstein 1:\nAbschluss des \nZellautomaten", c='r')
 
 
 
