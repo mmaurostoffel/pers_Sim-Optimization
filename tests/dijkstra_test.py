@@ -31,7 +31,7 @@ def dijkstra(graph, start, end):
     num_nodes = len(graph)
     distances = {node: float('inf') for node in range(num_nodes)}
     distances[start] = 0
-    priority_queue = [(0, start)]  # (distance, node)
+    priority_queue = [(0, start)]
     previous_nodes = {node: None for node in range(num_nodes)}
 
     while priority_queue:
