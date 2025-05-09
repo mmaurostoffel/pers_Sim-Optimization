@@ -41,6 +41,8 @@ def plot_matrix(matrix):
 
 
 
+#Image Size: 2058 x 2931 Pixels
+
 # Beispielanwendung
 matrix = analyze_image_brightness_grid("doc/Altstadt_detailiert_1000 - bearbeitet.jpg", cell_size=10)
 print(matrix)
