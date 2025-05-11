@@ -65,8 +65,6 @@ def addMarkers(matrix):
                 matrix = addPoint(matrix, j, i, pointsize=3, pointvalue=3)
     return matrix
 
-#Image Size: 2058 x 2931 Pixels
-
 # Beispielanwendung
 matrix = analyze_image_brightness_grid("doc/Altstadt_detailiert_1000 - bearbeitet.jpg", cell_size=5)
 print(matrix)
