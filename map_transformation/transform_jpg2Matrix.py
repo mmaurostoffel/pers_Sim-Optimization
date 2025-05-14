@@ -74,6 +74,7 @@ print(matrix.shape)
 # Add Waypoints
 #matrix = addMarkers(matrix)
 matrix = addWaypoints(matrix)
+np.save("doc/matrixOutput", matrix, allow_pickle=True)
 
 # Anwendung
 plot_matrix(matrix)
