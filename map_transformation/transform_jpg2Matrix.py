@@ -37,7 +37,7 @@ def analyze_image_brightness_grid(image_path, cell_size=10, threshold=230):
 
 def plot_matrix(matrix):
     #wall, path, waypoint, marker
-    colors = ["black", "white", "red"]
+    colors = ["black", "white", "green", "red"]
     cmap = ListedColormap(colors)
     plt.imshow(matrix, cmap=cmap, interpolation='nearest')
     plt.axis('off')
@@ -45,16 +45,14 @@ def plot_matrix(matrix):
     plt.show()
 
 def addWaypoints(matrix):
-    wp = pd.read_csv("doc/Waypoints.csv")
+    wp = pd.read_csv("doc/waypoints_modified.csv")
     for item in wp.iterrows():
         x, y, comment = item[1]
-        matrix = addPoint(matrix, x, y, pointsize=3)
-    return matrix
-
-def addPoint(matrix, x, y, pointsize = 2, pointvalue = 2):
-    for i in range(pointsize):
-        for j in range(pointsize):
-            matrix[y+i][x+j] = pointvalue
+        if comment != "WP":
+            pointvalue = 2
+        else:
+            pointvalue = 3
+        matrix = addCentralPoint(matrix, x, y, pointsize=3, pointvalue = pointvalue)
     return matrix
 
 def addMarkers(matrix):
@@ -63,6 +61,19 @@ def addMarkers(matrix):
             if i % 50 == 0 and j % 50 == 0:
                 matrix = addPoint(matrix, j, i, pointsize=3, pointvalue=3)
     return matrix
+
+def addPoint(matrix, x, y, pointsize = 2, pointvalue = 2):
+    for i in range(pointsize):
+        for j in range(pointsize):
+            matrix[y+i][x+j] = pointvalue
+    return matrix
+
+def addCentralPoint(matrix, x, y, pointsize = 3, pointvalue = 2):
+    for i in range(pointsize):
+        for j in range(pointsize):
+            matrix[y+i-1][x+j-1] = pointvalue
+    return matrix
+
 
 # Beispielanwendung
 matrix = analyze_image_brightness_grid("doc/Altstadt_detailiert_1000 - bearbeitet.jpg", cell_size=5)
