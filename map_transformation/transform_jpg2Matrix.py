@@ -45,7 +45,7 @@ def plot_matrix(matrix):
     plt.show()
 
 def addWaypoints(matrix):
-    wp = pd.read_csv("doc/waypoints_modified.csv")
+    wp = pd.read_csv("doc/waypoints_modified_scaled.csv")
     for item in wp.iterrows():
         x, y, comment = item[1]
         if comment != "WP":
@@ -76,7 +76,8 @@ def addCentralPoint(matrix, x, y, pointsize = 3, pointvalue = 2):
 
 
 # Beispielanwendung
-matrix = analyze_image_brightness_grid("doc/Altstadt_detailiert_1000 - bearbeitet.jpg", cell_size=5)
+#matrix = analyze_image_brightness_grid("doc/Altstadt_detailiert_1000 - bearbeitet.jpg", cell_size=5)
+matrix = analyze_image_brightness_grid("doc/Altstadt_detailiert_1000 - bearbeitet - skaliert.jpg", cell_size=5)
 print(matrix)
 
 print(matrix.shape)
