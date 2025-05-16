@@ -88,3 +88,13 @@ x,y,comment
 438,285,Exit_3
 438,150,Exit_2
 100,1,Exit_1
+200,6,Hotel
+251,150,Shop_2
+95,125,Restaurant_2
+300,52,Bar_2
+301,220,Bar_1
+57,400,Restaurant_1
+378,350,Polizei
+200,478,Shop_1
+375,585,Rathaus
+110,618,Kirche

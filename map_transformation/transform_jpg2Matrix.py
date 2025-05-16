@@ -37,7 +37,7 @@ def analyze_image_brightness_grid(image_path, cell_size=10, threshold=230):
 
 def plot_matrix(matrix):
     #wall, path, waypoint, marker
-    colors = ["black", "white", "green", "red", "blue"]
+    colors = ["black", "white", "green", "red"]
     cmap = ListedColormap(colors)
     plt.imshow(matrix, cmap=cmap, interpolation='nearest')
     plt.axis('off')
@@ -84,7 +84,7 @@ print(matrix.shape)
 
 
 # Add Waypoints
-matrix = addMarkers(matrix)
+# matrix = addMarkers(matrix)
 matrix = addWaypoints(matrix)
 np.save("doc/matrixOutput", matrix, allow_pickle=True)
 
