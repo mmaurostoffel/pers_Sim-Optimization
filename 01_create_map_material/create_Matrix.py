@@ -79,9 +79,11 @@ def addCentralPoint(matrix, x, y, pointsize = 3, pointvalue = 2):
 #matrix = analyze_image_brightness_grid("doc/Altstadt_detailiert_1000 - bearbeitet.jpg", cell_size=5)
 matrix = analyze_image_brightness_grid("doc/Altstadt_detailiert_1000 - bearbeitet - skaliert.jpg", cell_size=5)
 print(matrix)
-
 print(matrix.shape)
 
+
+np.save("doc/matrixBaseOutput", matrix, allow_pickle=True)
+plot_matrix(matrix)
 
 # Add Waypoints
 # matrix = addMarkers(matrix)
