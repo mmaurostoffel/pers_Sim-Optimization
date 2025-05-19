@@ -5,20 +5,20 @@ from matplotlib.colors import ListedColormap
 
 # Define constants
 CELL_PED = 2   # cell state: pedestrian
-CELL_OBS = 1  # cell state: obstacle
-CELL_EMP = 0   # cell state: empty
+CELL_OBS = 0  # cell state: obstacle
+CELL_EMP = 1   # cell state: empty
 
 VIS_PAUSE = 0.000001  # time [s] between two visual updates
 VIS_STEPS = 2    # stride [steps] between two visual updates
-MAX_TIME = 40
+MAX_TIME = 200
 
 # Load Grid
 emptyMap = np.load('../01_create_map_material/doc/matrixBaseOutput.npy')
 old = emptyMap.copy()
 new = old.copy()
 
-GRIDSIZE_X = old.shape[0]
-GRIDSIZE_Y = old.shape[1]
+GRIDSIZE_X = emptyMap.shape[0]
+GRIDSIZE_Y = emptyMap.shape[1]
 
 # Read starting Positions from scenario file
 scenario = pd.read_csv("../02_createScenarios/scenario_files/altstadt_50_5_2025-5-18-13%10.csv")
@@ -29,6 +29,24 @@ for index,row in scenario.iterrows():
 
 def update(old, new):
     print("")
+
+def update(old, new):
+    for x in range(GRIDSIZE_X):
+        for y in range(GRIDSIZE_Y):
+            if old[x, y] == CELL_PED:
+                if old[(x + 1) % GRIDSIZE_X, y] == CELL_EMP:
+                    new[(x + 1) % GRIDSIZE_X, y] = CELL_PED
+                    old[(x + 1) % GRIDSIZE_X, y] = CELL_OBS
+                else:
+                    if old[x, y] == CELL_EMP:
+                        new[x, y] = CELL_PED
+                        old[x, y] = CELL_OBS
+                    elif old[x, y] == CELL_EMP:
+                        new[x, y] = CELL_PED
+                        old[x, y] = CELL_OBS
+                    else:
+                        new[x, y] = CELL_PED
+                        old[x, y] = CELL_OBS
 
 time = 0
 dens = []
