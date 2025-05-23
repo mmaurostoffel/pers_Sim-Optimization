@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import random
 import datetime
+import breath_first_search as bfs
 
 # Inputs
 baseMap = np.load('../01_create_map_material/doc/matrixBaseOutput.npy')
 wp = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
 
-numPeople = 50      # defines how many people are in the scenario
-numOfTasks = 5      # defines how many tasks a person is supposed to do
+numPeople = 1      # defines how many people are in the scenario
+numOfTasks = 3     # defines how many tasks a person is supposed to do
 
 # Constants
 CELL_OBS = 0
@@ -36,6 +37,13 @@ def extractExitsAndShopsFromWP(wp):
                 shops.append(wp.iloc[i])
     return exits, shops
 
+def setOfWaypoint(wp):
+        waypoints = []
+        for index, row in wp.iterrows():
+            x = int(row['x'])
+            y = int(row['y'])
+            waypoints.append((x, y))
+        return waypoints
 
 # Extract shops and exits from waypoint file
 exits, shops = extractExitsAndShopsFromWP(wp)
@@ -53,27 +61,34 @@ for i in range(numPeople):
             break
     currentPerson.append([x, y])
 
+    # Find the closest Waypoint to starting pos
+    foundWP = bfs.find_closest_waypoint(baseMap, (x, y), setOfWaypoint(wp))
+    currentPerson.append(foundWP)
+
     # Add Tasks
     tempShops = shops
     shopList = []
     for j in range(numOfTasks):
         elem = random.choice(tempShops)
         tempShops = [item for item in tempShops if not item.equals(elem)]
-
         shopList.append([elem.name,elem['x'], elem['y'],elem['comment']])
-    currentPerson.append(shopList)
 
     # Add Exit
     exit = random.choice(exits)
-
     shopList.append([exit.name, exit['x'], exit['y'], exit['comment']])
+
+    # Add ShopList to currentPerson
+    currentPerson.append(shopList)
+
     # Add person to scenario file
     scenarioFile.append(currentPerson)
 
-df = pd.DataFrame(scenarioFile, columns=["startingPos", "shopList"])
-print(df)
 
 today = datetime.datetime.now()
-df.to_csv(f"scenario_files/altstadt_{numPeople}_{numOfTasks}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}.csv", index=False)
+scenarioFile = np.array(scenarioFile, dtype=object)
+np.save(f"scenario_files/altstadt_{numPeople}_{numOfTasks}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
 
+# also save as csv if neccessary
+df = pd.DataFrame(scenarioFile)
+df.to_csv(f"scenario_files/temp.csv", index=False)
 
