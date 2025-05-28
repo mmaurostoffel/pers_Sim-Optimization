@@ -33,11 +33,6 @@ adj_matrix = adj_matrix.to_numpy()
 # Load Waypoints
 WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
 
-################## Temporary ##################
-EXIT_X = GRIDSIZE_X
-EXIT_Y = GRIDSIZE_Y / 2
-################## Temporary ##################
-
 def reorderStations(stations):
     match STATION_ORDER:
         case 0:  # Sort the list
@@ -69,7 +64,9 @@ def checkTargetReached(x, y, x_target, y_target):
 
 # Read starting Positions from scenario file
 personalList = []
-scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-23-15%21.npy", allow_pickle=True)
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-23-15%21.npy", allow_pickle=True)
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-29-0%38.npy", allow_pickle=True)
+scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-29-0%45.npy", allow_pickle=True)
 for row in scenario:
     person = {}
     # Get Starting Pos
@@ -98,12 +95,11 @@ for row in scenario:
 
     # Add Person to personalList
     personalList.append(person)
-    print(personalList)
     break
 
 def updatePerson(old, new):
     for person in personalList:
-        print(person)
+        print("HELLO", person)
         x, y = person['currentPos']
         x_target, y_target = person['goal']
 
