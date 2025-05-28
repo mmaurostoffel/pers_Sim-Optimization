@@ -31,7 +31,7 @@ adj_matrix = adj_matrix.map(pd.to_numeric, errors='coerce')
 adj_matrix = adj_matrix.to_numpy()
 
 # Load Waypoints
-wp = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
+WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
 
 ################## Temporary ##################
 EXIT_X = GRIDSIZE_X
@@ -52,8 +52,20 @@ def getWaypoints(lastStation, nextStation):
     return path
 
 def getWaypointIndex(x,y):
-    index = wp[(wp['x'] == x) & (wp['y'] == y)].index[0]
+    index = WP_LIST[(WP_LIST['x'] == x) & (WP_LIST['y'] == y)].index[0]
     return index
+
+def getWaypointCoords(index):
+    row = WP_LIST.iloc[index]
+    x = row['x']
+    y = row['y']
+    return [x,y]
+
+def checkTargetReached(x, y, x_target, y_target):
+    if x == x_target and y == y_target:
+        return True
+    else:
+        return False
 
 # Read starting Positions from scenario file
 personalList = []
@@ -80,64 +92,82 @@ for row in scenario:
     wp = getWaypoints(int(startNode), int(row[2][0][0]))
     person['waypoints'] = wp
 
+    # Get next Goal
+    goal = getWaypointCoords(wp[0])
+    person['goal'] = goal
+
     # Add Person to personalList
     personalList.append(person)
     print(personalList)
     break
 
-#def update(old, new):
-#    print("")
+def updatePerson(old, new):
+    for person in personalList:
+        print(person)
+        x, y = person['currentPos']
+        x_target, y_target = person['goal']
 
-def update(old, new):
-    for x in range(1,GRIDSIZE_X-1):
-        for y in range(1,GRIDSIZE_Y-1):
-            if old[x, y] == CELL_PED:
-                x_dist = x-EXIT_X
-                x_move = 1 if x_dist > 0 else -1
-                y_dist = y-EXIT_Y
-                y_move = 1 if y_dist > 0 else -1
-                if abs(x_dist) > abs(y_dist):
-                    if old[(x + x_move), y] == CELL_EMP:
-                        new[(x + x_move), y] = CELL_PED
-                        old[(x + x_move), y] = CELL_OBS
-                    elif old[x, (y + y_move)] == CELL_EMP:
-                        new[x, (y + y_move)] = CELL_PED
-                        old[x, (y + y_move)] = CELL_OBS
-                    else:
-                        new[x, y] = CELL_PED
-                        old[x, y] = CELL_OBS
+        if checkTargetReached(x, y, x_target, y_target):
+            # Remove first wp in waypoints
+            person['waypoints'].pop(0)
+
+            # Set new goal
+            goal = getWaypointCoords(person['waypoints'][0])
+            person['goal'] = goal
+
+            # Set new Target
+            x_target, y_target = person['goal']
+
+        if old[x, y] == CELL_PED:
+            x_dist = x_target - x
+            x_move = 1 if x_dist > 0 else -1
+            y_dist = y_target - y
+            y_move = 1 if y_dist > 0 else -1
+            if abs(x_dist) > abs(y_dist):
+                if old[(x + x_move), y] == CELL_EMP:
+                    new[(x + x_move), y] = CELL_PED
+                    old[(x + x_move), y] = CELL_OBS
+                    person['currentPos'] = [(x + x_move), y]
+                elif old[x, (y + y_move)] == CELL_EMP:
+                    new[x, (y + y_move)] = CELL_PED
+                    old[x, (y + y_move)] = CELL_OBS
+                    person['currentPos'] = [x, (y + y_move)]
                 else:
-                    if old[x, (y + y_move)] == CELL_EMP:
-                        new[x, (y + y_move)] = CELL_PED
-                        old[x, (y + y_move)] = CELL_OBS
-                    elif old[(x + x_move), y] == CELL_EMP:
-                        new[(x + x_move), y] = CELL_PED
-                        old[(x + x_move), y] = CELL_OBS
-                    else:
-                        new[x, y] = CELL_PED
-                        old[x, y] = CELL_OBS
-
+                    new[x, y] = CELL_PED
+                    old[x, y] = CELL_OBS
+            else:
+                if old[x, (y + y_move)] == CELL_EMP:
+                    new[x, (y + y_move)] = CELL_PED
+                    old[x, (y + y_move)] = CELL_OBS
+                    person['currentPos'] = [x, (y + y_move)]
+                elif old[(x + x_move), y] == CELL_EMP:
+                    new[(x + x_move), y] = CELL_PED
+                    old[(x + x_move), y] = CELL_OBS
+                    person['currentPos'] = [(x + x_move), y]
+                else:
+                    new[x, y] = CELL_PED
+                    old[x, y] = CELL_OBS
+        else:
+            print("Person not found where she's supposed to be")
 
 time = 0
 dens = []
 
-colors = ["black", "white", "green"]
+colors = ["black", "white", "red"]
 cmap = ListedColormap(colors)
 plt.ion()
 plt.imshow(old, cmap=cmap, interpolation='nearest')
-#plt.imshow(old[100:50, 1:100], cmap=cmap, interpolation='nearest')
 plt.pause(VIS_PAUSE)
 while time < MAX_TIME:
     new = emptyMap.copy()
-    update(old, new)
+    updatePerson(old, new)
     old = new.copy()
     time = time + 1
     if time%VIS_STEPS == 0:
       plt.clf()
       plt.imshow(old, cmap=cmap, interpolation='nearest')
-      #plt.imshow(old[100:500, 1:100], cmap=cmap, interpolation='nearest')
       plt.pause(VIS_PAUSE)
-      plt.pause(10000)
+      plt.pause(0.1)
 plt.ioff()
 
 # while count_peds(old) > 0 and time < MAX_TIME:
