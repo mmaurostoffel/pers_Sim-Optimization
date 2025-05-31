@@ -89,6 +89,6 @@ scenarioFile = np.array(scenarioFile, dtype=object)
 np.save(f"scenario_files/altstadt_{numPeople}_{numOfTasks}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
 
 # also save as csv if neccessary
-df = pd.DataFrame(scenarioFile)
-df.to_csv(f"scenario_files/temp.csv", index=False)
+# df = pd.DataFrame(scenarioFile)
+# df.to_csv(f"scenario_files/temp.csv", index=False)
 

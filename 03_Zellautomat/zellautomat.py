@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-
 import dijkstra_algorithm as dj
 
 # Define constants
@@ -11,8 +10,8 @@ CELL_OBS = 0  # cell state: obstacle
 CELL_EMP = 1   # cell state: empty
 
 VIS_PAUSE = 0.000001  # time [s] between two visual updates
-VIS_STEPS = 2    # stride [steps] between two visual updates
-MAX_TIME = 200
+VIS_STEPS = 10    # stride [steps] between two visual updates
+MAX_TIME = 3000
 
 STATION_ORDER = 0 # 1 = predefined, 1 = random, 2 = optimized
 
@@ -25,13 +24,19 @@ GRIDSIZE_X = emptyMap.shape[0]
 GRIDSIZE_Y = emptyMap.shape[1]
 
 # Load adjacency matrix
-adj_matrix = pd.read_csv('../01_create_map_material/doc/adjacencyMatrix')
-adj_matrix = adj_matrix.replace(to_replace='x', value=0, regex=True)
-adj_matrix = adj_matrix.map(pd.to_numeric, errors='coerce')
-adj_matrix = adj_matrix.to_numpy()
+ADJ_MATRIX = pd.read_csv('../01_create_map_material/doc/adjacencyMatrix')
+ADJ_MATRIX = ADJ_MATRIX.replace(to_replace='x', value=0, regex=True)
+ADJ_MATRIX = ADJ_MATRIX.map(pd.to_numeric, errors='coerce')
+ADJ_MATRIX = ADJ_MATRIX.to_numpy()
 
 # Load Waypoints
 WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
+
+# Load Waypoints
+STATIONS = np.load("../02_createScenarios/station_files/altstadt_2025-5-30-19%10.npy", allow_pickle=True)
+
+# Set Debug Level
+DEBUG_LEVEL = 2
 
 def reorderStations(stations):
     match STATION_ORDER:
@@ -43,7 +48,7 @@ def reorderStations(stations):
             return stations
 
 def getWaypoints(lastStation, nextStation):
-    path, distance = dj.getWaypoints(adj_matrix, lastStation, nextStation)
+    path, distance = dj.getWaypoints(ADJ_MATRIX, lastStation, nextStation)
     return path
 
 def getWaypointIndex(x,y):
@@ -52,9 +57,13 @@ def getWaypointIndex(x,y):
 
 def getWaypointCoords(index):
     row = WP_LIST.iloc[index]
-    x = row['x']
-    y = row['y']
+    x = int(row['x'])
+    y = int(row['y'])
     return [x,y]
+
+def getStationTime(index):
+    target_time = [item['time'] for item in STATIONS if item['index'] == index][0]
+    return target_time
 
 def checkTargetReached(x, y, x_target, y_target):
     if x == x_target and y == y_target:
@@ -62,50 +71,50 @@ def checkTargetReached(x, y, x_target, y_target):
     else:
         return False
 
-# Read starting Positions from scenario file
-personalList = []
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-23-15%21.npy", allow_pickle=True)
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-29-0%38.npy", allow_pickle=True)
-scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-29-0%45.npy", allow_pickle=True)
-for row in scenario:
-    person = {}
-    # Get Starting Pos
-    x = row[0][0]
-    y = row[0][1]
-    person['currentPos'] = [x, y]
-    # Place on Board
-    old[int(x), int(y)] = CELL_PED
-
-    # Get first Waypoint
-    firstWp = row[1]
-    startNode = getWaypointIndex(firstWp[0], firstWp[1])
-
-    # Apply station orders
-    row[1] = reorderStations(row[2])
-    # Get stations
-    person['stations'] = row[2]
-
-    # Generate next Waypoints
-    wp = getWaypoints(int(startNode), int(row[2][0][0]))
-    person['waypoints'] = wp
-
-    # Get next Goal
-    goal = getWaypointCoords(wp[0])
-    person['goal'] = goal
-
-    # Add Person to personalList
-    personalList.append(person)
-    break
+def prettyPrint(person):
+    string = "curr: " + str(person['currentPos']) + ", target: [" + str(person['goal'][0])+", "+str(person['goal'][1])+"], wp: " + str(person['waypoints'])
+    return string
 
 def updatePerson(old, new):
+    removeList = []
     for person in personalList:
-        print("HELLO", person)
+        if time % VIS_STEPS == 0:
+            if DEBUG_LEVEL == 1: print(prettyPrint(person))
+            if DEBUG_LEVEL == 2: print(person)
+
         x, y = person['currentPos']
         x_target, y_target = person['goal']
 
         if checkTargetReached(x, y, x_target, y_target):
             # Remove first wp in waypoints
             person['waypoints'].pop(0)
+
+            # station reached
+            if len(person['waypoints']) == 0:
+                # => Check for Exit and remove if it is one
+                if person['stations'][0] in EXIT_LIST:
+                    print("Exit reached -> removing person")
+                    removeList.append(person)
+                else:
+                    # => Add to remove List. Remove from stations list. Refill wp list. Add to station queue.
+                    print("station reached")
+                    # Add to remove List
+                    removeList.append(person)
+
+                    # Remove from stations list.
+                    currentStation = person['stations'][0]
+                    person['stations'].pop(0)
+
+                    # Refill wp list.
+                    wp = getWaypoints(currentStation, person['stations'][0])
+                    person['waypoints'] = wp
+
+                    for entry in stationList:
+                        if entry['index'] == currentStation:
+                            entry['queue'].append(person)
+                            entry['current_serv_time'] += int(entry['serv_time'])
+                            break
+                continue
 
             # Set new goal
             goal = getWaypointCoords(person['waypoints'][0])
@@ -146,14 +155,93 @@ def updatePerson(old, new):
         else:
             print("Person not found where she's supposed to be")
 
-time = 0
-dens = []
+    # Remove all People on removeList from personalList
+    for item in removeList:
+        personalList.remove(item)
 
+    # Tick StationList
+    for entry in stationList:
+        # Decrease all current_serv_time by 1
+        if entry['current_serv_time'] > 0:
+            entry['current_serv_time'] -= 1
+            # if current_serv_time reached 0 add it back to personalList
+            if entry['current_serv_time'] == 0:
+                # Check if reentry point is occupied
+                currX, currY = entry['queue'][0]['currentPos']
+                if old[int(currX), int(currY)] == CELL_PED:
+                    # Location occupied: Wait another turn
+                    entry['current_serv_time'] = 1
+                else:
+                    # Location empty: Place person back on field
+                    new[int(currX), int(currY)] = CELL_PED
+                    personalList.append(entry['queue'][0])
+
+# Initialize personalList
+personalList = []
+# one person (1)
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-29-0%45.npy", allow_pickle=True)
+# one person (2)
+scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-31-17%53.npy", allow_pickle=True)
+# ten people
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_3_2025-5-29-0%49.npy", allow_pickle=True)
+for row in scenario:
+    person = {}
+    # Get Starting Pos
+    x = row[0][0]
+    y = row[0][1]
+    person['currentPos'] = [x, y]
+    # Place on Board
+    old[int(x), int(y)] = CELL_PED
+
+    # Get first Waypoint
+    firstWp = row[1]
+    startNode = getWaypointIndex(firstWp[0], firstWp[1])
+
+    # Apply station orders
+    row[2] = reorderStations(row[2])
+    # Get stations
+    # person['stations'] = row[2]
+    person['stations'] = [item[0] for item in row[2]]
+
+    # Generate next Waypoints
+    wp = getWaypoints(int(startNode), int(row[2][0][0]))
+    person['waypoints'] = wp
+
+    # Get next Goal
+    goal = getWaypointCoords(wp[0])
+    person['goal'] = goal
+
+    # Add Person to personalList
+    personalList.append(person)
+
+# Initialize Station List
+stationList = []
+EXIT_LIST = []
+for index, (x, y, comm) in WP_LIST.iterrows():
+    if comm != "WP":
+        if not str(comm).startswith("Exit_"):
+            station = {}
+            station['index'] = index
+            station['pos'] = [x, y]
+            station['name'] = comm
+            station['pname'] = str(comm).replace("_", " ")
+            station['serv_time'] = getStationTime(index)
+            station['current_serv_time'] = 0
+            station['queue'] = []
+
+            stationList.append(station)
+        else:
+            EXIT_LIST.append(index)
+print(stationList)
+
+# Start Simulation Loop
+time = 0
 colors = ["black", "white", "red"]
 cmap = ListedColormap(colors)
 plt.ion()
 plt.imshow(old, cmap=cmap, interpolation='nearest')
 plt.pause(VIS_PAUSE)
+# while count_peds(old) > 0 and time < MAX_TIME:
 while time < MAX_TIME:
     new = emptyMap.copy()
     updatePerson(old, new)
@@ -165,12 +253,3 @@ while time < MAX_TIME:
       plt.pause(VIS_PAUSE)
       plt.pause(0.1)
 plt.ioff()
-
-# while count_peds(old) > 0 and time < MAX_TIME:
-
-
-
-
-
-
-
