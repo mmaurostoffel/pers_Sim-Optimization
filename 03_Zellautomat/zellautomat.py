@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
+from matplotlib.colors import ListedColormap, BoundaryNorm
 import dijkstra_algorithm as dj
 
 # Define constants
@@ -72,7 +72,7 @@ def checkTargetReached(x, y, x_target, y_target):
         return False
 
 def prettyPrint(person):
-    string = "curr: " + str(person['currentPos']) + ", target: [" + str(person['goal'][0])+", "+str(person['goal'][1])+"], wp: " + str(person['waypoints'])
+    string = "ID: "+ str(person['currentPos']) + "curr: " + str(person['currentPos']) + ", target: [" + str(person['goal'][0])+", "+str(person['goal'][1])+"], wp: " + str(person['waypoints'])
     return string
 
 def updatePerson(old, new):
@@ -176,16 +176,26 @@ def updatePerson(old, new):
                     new[int(currX), int(currY)] = CELL_PED
                     personalList.append(entry['queue'][0])
 
+def getPersonID(x,y):
+    for index, item in enumerate(personalList):
+        if item.get("currentPos") == [x, y]:
+            return item.get("id")
+    return -1  # Return -1 if not found
+
 # Initialize personalList
 personalList = []
 # one person (1)
 # scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-29-0%45.npy", allow_pickle=True)
 # one person (2)
-scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-31-17%53.npy", allow_pickle=True)
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-31-17%53.npy", allow_pickle=True)
 # ten people
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_3_2025-5-29-0%49.npy", allow_pickle=True)
+scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_3_2025-5-29-0%49.npy", allow_pickle=True)
+id = 1
 for row in scenario:
     person = {}
+    # Set static Index
+    person['id'] = id
+    id += 1
     # Get Starting Pos
     x = row[0][0]
     y = row[0][1]
@@ -232,24 +242,35 @@ for index, (x, y, comm) in WP_LIST.iterrows():
             stationList.append(station)
         else:
             EXIT_LIST.append(index)
-print(stationList)
 
 # Start Simulation Loop
 time = 0
-colors = ["black", "white", "red"]
-cmap = ListedColormap(colors)
+
+# Setup plot
 plt.ion()
-plt.imshow(old, cmap=cmap, interpolation='nearest')
-plt.pause(VIS_PAUSE)
-# while count_peds(old) > 0 and time < MAX_TIME:
+fig, ax = plt.subplots()
+
+# Custom colormap
+cmap = ListedColormap(['gray', 'white', 'white'])
+norm = BoundaryNorm([0, 0.5, 1.5, 2.5], cmap.N)
+
 while time < MAX_TIME:
     new = emptyMap.copy()
     updatePerson(old, new)
     old = new.copy()
-    time = time + 1
-    if time%VIS_STEPS == 0:
-      plt.clf()
-      plt.imshow(old, cmap=cmap, interpolation='nearest')
-      plt.pause(VIS_PAUSE)
-      plt.pause(0.1)
+    time += 1
+
+    if time % VIS_STEPS == 0:
+        ax.cla()
+        ax.imshow(old, cmap=cmap, norm=norm)
+
+        pedestrian_positions = np.argwhere(old == 2)
+        for y, x in pedestrian_positions:
+            ax.plot(x, y, marker='o', color='red', markersize=10)
+            ax.text(x+7, y-7, str(getPersonID(y,x)), color='black', fontsize=10, ha='center', va='center', weight='bold')
+
+        plt.pause(VIS_PAUSE)
+        # plt.pause(1)
+
 plt.ioff()
+plt.show()
