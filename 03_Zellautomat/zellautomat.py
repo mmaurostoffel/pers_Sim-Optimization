@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import dijkstra_algorithm as dj
+import keyboard
 
 # Set Debug Level
 DEBUG_LEVEL = 2         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
@@ -120,7 +121,8 @@ def updatePerson(old, new):
                     for entry in stationList:
                         if entry['index'] == currentStation:
                             entry['queue'].append(person)
-                            entry['current_serv_time'] += int(entry['serv_time'])
+                            if entry['current_serv_time'] == 0:
+                                entry['current_serv_time'] += int(entry['serv_time'])
                             break
                 continue
 
@@ -186,6 +188,9 @@ def updatePerson(old, new):
                 personalList.append(entry['queue'][0])
                 # Remove from StationList
                 entry['queue'].pop(0)
+                if len(entry['queue']) > 0:
+                    entry['current_serv_time'] += int(entry['serv_time'])
+
 
 def checkPeopleRemaining():
     if len(personalList) == 0:
@@ -196,6 +201,19 @@ def checkPeopleRemaining():
         return True
     return False
 
+def saveTickInfo(currHistory):
+    tick = {}
+    tick['time'] = time
+    tick['numPeopleOnField'] = len(personalList)
+    stationWaitTimes = []
+    stationQueueLength = []
+    for station in stationList:
+        stationWaitTimes.append(station['current_serv_time'])
+        stationQueueLength.append(len(station['queue']))
+    tick['stationWaitTimes'] = stationWaitTimes
+    currHistory.append(tick)
+    return currHistory
+
 
 # Initialize personalList
 personalList = []
@@ -204,7 +222,9 @@ personalList = []
 # one person (2)
 # scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-31-17%53.npy", allow_pickle=True)
 # ten people
-scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_3_2025-5-29-0%49.npy", allow_pickle=True)
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_3_2025-5-29-0%49.npy", allow_pickle=True)
+# 100 people
+scenario = np.load("../02_createScenarios/scenario_files/altstadt_100_5_2025-6-19-20%31.npy", allow_pickle=True)
 id = 1
 for row in scenario:
     person = {}
@@ -275,6 +295,7 @@ plt.ion()
 
 # Simulationsschleife
 peopleInSim = True
+history = []
 while peopleInSim:
     # Clear Console
     if DEBUG_LEVEL > 0:
@@ -320,8 +341,6 @@ while peopleInSim:
             persons_at_station = len(station['queue'])
             wait_time = station['current_serv_time']
 
-
-            # icons = '👤' * min(persons_at_station, 5)
             icons = 'o' * min(persons_at_station, 5)
             if persons_at_station > 5:
                 icons += f" +{persons_at_station - 5}"
@@ -333,11 +352,37 @@ while peopleInSim:
 
         plt.pause(VIS_PAUSE)
 
-        peopleInSim = checkPeopleRemaining()
+    peopleInSim = checkPeopleRemaining()
+    history = saveTickInfo(history)
 
+    # Exit from Loop
+    if keyboard.is_pressed('q'):
+        break
 
-print("Simulation finished")
 plt.ioff()
 plt.show()
+
+print(f"Simulation finished in {time} ticks")
+# print(history)
+
+# Extract time and station wait times
+times = [entry['time'] for entry in history]
+station_waits = list(zip(*[entry['stationWaitTimes'] for entry in history]))
+
+# Plot each station's wait times
+plt.figure(figsize=(12, 6))
+for i, wait_times in enumerate(station_waits):
+    plt.plot(times, wait_times, label=f'Station {i}')
+
+plt.xlabel('Time')
+plt.ylabel('Wait Time')
+plt.title('Station Wait Times Over Time')
+plt.legend(loc='upper right', ncol=2)
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+
+
 
 
