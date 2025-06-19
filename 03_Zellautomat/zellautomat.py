@@ -11,7 +11,9 @@ CELL_EMP = 1   # cell state: empty
 
 VIS_PAUSE = 0.000001  # time [s] between two visual updates
 VIS_STEPS = 10    # stride [steps] between two visual updates
-MAX_TIME = 3000
+MAX_TIME = 3000   # Max Timesteps before the simulation stops
+TIME_PER_STEP = 0.3  # The amount of real time that each time step symbolizes
+
 
 STATION_ORDER = 0 # 1 = predefined, 1 = random, 2 = optimized
 
@@ -74,6 +76,12 @@ def checkTargetReached(x, y, x_target, y_target):
 def prettyPrint(person):
     string = "ID: "+ str(person['currentPos']) + "curr: " + str(person['currentPos']) + ", target: [" + str(person['goal'][0])+", "+str(person['goal'][1])+"], wp: " + str(person['waypoints'])
     return string
+
+def getPersonID(x,y):
+    for index, item in enumerate(personalList):
+        if item.get("currentPos") == [x, y]:
+            return item.get("id")
+    return -1
 
 def updatePerson(old, new):
     removeList = []
@@ -153,7 +161,7 @@ def updatePerson(old, new):
                     new[x, y] = CELL_PED
                     old[x, y] = CELL_OBS
         else:
-            print("Person not found where she's supposed to be")
+            print(f"Person {person['id']} not found where she's supposed to be")
 
     # Remove all People on removeList from personalList
     for item in removeList:
@@ -175,12 +183,6 @@ def updatePerson(old, new):
                     # Location empty: Place person back on field
                     new[int(currX), int(currY)] = CELL_PED
                     personalList.append(entry['queue'][0])
-
-def getPersonID(x,y):
-    for index, item in enumerate(personalList):
-        if item.get("currentPos") == [x, y]:
-            return item.get("id")
-    return -1  # Return -1 if not found
 
 # Initialize personalList
 personalList = []
@@ -243,17 +245,22 @@ for index, (x, y, comm) in WP_LIST.iterrows():
         else:
             EXIT_LIST.append(index)
 
+
+
 # Start Simulation Loop
 time = 0
-
-# Setup plot
-plt.ion()
-fig, ax = plt.subplots()
-
-# Custom colormap
 cmap = ListedColormap(['gray', 'white', 'white'])
 norm = BoundaryNorm([0, 0.5, 1.5, 2.5], cmap.N)
 
+# Visualisierung vorbereiten
+import matplotlib.gridspec as gridspec
+fig = plt.figure(figsize=(14, 8))
+gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1])
+ax = fig.add_subplot(gs[0])
+ax_station = fig.add_subplot(gs[1])
+plt.ion()
+
+# Simulationsschleife
 while time < MAX_TIME:
     new = emptyMap.copy()
     updatePerson(old, new)
@@ -261,16 +268,40 @@ while time < MAX_TIME:
     time += 1
 
     if time % VIS_STEPS == 0:
+
+        # Pedestrians
         ax.cla()
         ax.imshow(old, cmap=cmap, norm=norm)
-
         pedestrian_positions = np.argwhere(old == 2)
         for y, x in pedestrian_positions:
             ax.plot(x, y, marker='o', color='red', markersize=10)
-            ax.text(x+7, y-7, str(getPersonID(y,x)), color='black', fontsize=10, ha='center', va='center', weight='bold')
+            ax.text(x+7, y-7, str(getPersonID(y, x)), color='black', fontsize=10,
+                    ha='center', va='center', weight='bold')
+
+        # Station-status
+        ax_station.clear()
+        ax_station.axis('off')
+        ax_station.set_title("Stationen & Status", fontsize=12, fontweight='bold')
+        if DEBUG_LEVEL == 2: print("STATION LIST = ", stationList)
+        
+        for station in stationList:
+            name = station['name']
+            persons_at_station = len(station['queue'])
+            wait_time = station['current_serv_time']
+            idx = int(station['index']) - 88
+
+            # icons = '👤' * min(persons_at_station, 5)
+            icons = 'o' * min(persons_at_station, 5)
+            if persons_at_station > 5:
+                icons += f" +{persons_at_station - 5}"
+            y_pos = 0.9 - idx * 0.09
+            ax_station.text(0.05, y_pos, f"{name}:", fontsize=10, weight='bold', va='center')
+            ax_station.text(0.45, y_pos, f"{wait_time:.1f} min", fontsize=10, va='center', ha='right')
+            ax_station.text(0.55, y_pos, icons, fontsize=12, va='center')
 
         plt.pause(VIS_PAUSE)
-        # plt.pause(1)
 
 plt.ioff()
 plt.show()
+
+
