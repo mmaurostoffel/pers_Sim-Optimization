@@ -14,7 +14,7 @@ CELL_EMP = 1            # cell state: empty
 
 VIS_PAUSE = 0.000001    # time [s] between two visual updates
 VIS_STEPS = 5           # stride [steps] between two visual updates
-MAX_TIME = 3000         # Max Timesteps before the simulation stops
+MAX_TIME = 5000         # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3     # The amount of real time that each time step symbolizes
 
 STATION_ORDER = 0       # 1 = predefined, 1 = random, 2 = optimized
@@ -187,6 +187,16 @@ def updatePerson(old, new):
                 # Remove from StationList
                 entry['queue'].pop(0)
 
+def checkPeopleRemaining():
+    if len(personalList) == 0:
+        for station in stationList:
+            if len(station['queue']) > 0:
+                return True
+    else:
+        return True
+    return False
+
+
 # Initialize personalList
 personalList = []
 # one person (1)
@@ -264,7 +274,8 @@ ax_station = fig.add_subplot(gs[1])
 plt.ion()
 
 # Simulationsschleife
-while time < MAX_TIME:
+peopleInSim = True
+while peopleInSim:
     # Clear Console
     if DEBUG_LEVEL > 0:
         print("\n" * 100)
@@ -321,6 +332,9 @@ while time < MAX_TIME:
             ax_station.text(0.55, y_pos, icons, fontsize=12, va='center')
 
         plt.pause(VIS_PAUSE)
+
+        peopleInSim = checkPeopleRemaining()
+
 
 print("Simulation finished")
 plt.ioff()
