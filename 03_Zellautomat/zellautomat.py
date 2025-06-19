@@ -10,7 +10,7 @@ CELL_OBS = 0  # cell state: obstacle
 CELL_EMP = 1   # cell state: empty
 
 VIS_PAUSE = 0.000001  # time [s] between two visual updates
-VIS_STEPS = 10    # stride [steps] between two visual updates
+VIS_STEPS = 5    # stride [steps] between two visual updates
 MAX_TIME = 3000   # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3  # The amount of real time that each time step symbolizes
 
@@ -38,7 +38,7 @@ WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.c
 STATIONS = np.load("../02_createScenarios/station_files/altstadt_2025-5-30-19%10.npy", allow_pickle=True)
 
 # Set Debug Level
-DEBUG_LEVEL = 2
+DEBUG_LEVEL = 0
 
 def reorderStations(stations):
     match STATION_ORDER:
@@ -172,17 +172,20 @@ def updatePerson(old, new):
         # Decrease all current_serv_time by 1
         if entry['current_serv_time'] > 0:
             entry['current_serv_time'] -= 1
-            # if current_serv_time reached 0 add it back to personalList
-            if entry['current_serv_time'] == 0:
-                # Check if reentry point is occupied
-                currX, currY = entry['queue'][0]['currentPos']
-                if old[int(currX), int(currY)] == CELL_PED:
-                    # Location occupied: Wait another turn
-                    entry['current_serv_time'] = 1
-                else:
-                    # Location empty: Place person back on field
-                    new[int(currX), int(currY)] = CELL_PED
-                    personalList.append(entry['queue'][0])
+
+        # if current_serv_time reached 0 add it back to personalList
+        if entry['current_serv_time'] == 0 and len(entry['queue']) > 0:
+            # Check if reentry point is occupied
+            currX, currY = entry['queue'][0]['currentPos']
+            if old[int(currX), int(currY)] == CELL_PED:
+                # Location occupied: Wait another turn
+                entry['current_serv_time'] = 1
+            else:
+                # Location empty: Place person back on field
+                new[int(currX), int(currY)] = CELL_PED
+                personalList.append(entry['queue'][0])
+                # Remove from StationList
+                entry['queue'].pop(0)
 
 # Initialize personalList
 personalList = []
@@ -254,7 +257,7 @@ norm = BoundaryNorm([0, 0.5, 1.5, 2.5], cmap.N)
 
 # Visualisierung vorbereiten
 import matplotlib.gridspec as gridspec
-fig = plt.figure(figsize=(14, 8))
+fig = plt.figure(figsize=(18, 8))
 gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1])
 ax = fig.add_subplot(gs[0])
 ax_station = fig.add_subplot(gs[1])
@@ -262,6 +265,14 @@ plt.ion()
 
 # Simulationsschleife
 while time < MAX_TIME:
+    # Clear Console
+    if DEBUG_LEVEL > 0:
+        print("\n" * 100)
+        for person in personalList:
+            if DEBUG_LEVEL == 1: print(prettyPrint(person))
+            if DEBUG_LEVEL == 2: print(person)
+        if DEBUG_LEVEL == 2: print("STATION LIST = ", stationList)
+
     new = emptyMap.copy()
     updatePerson(old, new)
     old = new.copy()
@@ -282,25 +293,31 @@ while time < MAX_TIME:
         ax_station.clear()
         ax_station.axis('off')
         ax_station.set_title("Stationen & Status", fontsize=12, fontweight='bold')
-        if DEBUG_LEVEL == 2: print("STATION LIST = ", stationList)
         
         for station in stationList:
-            name = station['name']
+            idx = int(station['index']) - 88
+            # Add marker
+            ax.plot(station['pos'][0], station['pos'][1], marker='o', color='green', markersize=15)
+            ax.text(station['pos'][0], station['pos'][1], str(idx), color='white', fontsize=10,
+                    ha='center', va='center', weight='bold')
+
             persons_at_station = len(station['queue'])
             wait_time = station['current_serv_time']
-            idx = int(station['index']) - 88
+
 
             # icons = '👤' * min(persons_at_station, 5)
             icons = 'o' * min(persons_at_station, 5)
             if persons_at_station > 5:
                 icons += f" +{persons_at_station - 5}"
             y_pos = 0.9 - idx * 0.09
-            ax_station.text(0.05, y_pos, f"{name}:", fontsize=10, weight='bold', va='center')
+            ax_station.text(0.05, y_pos, f"{idx}:", fontsize=10, weight='bold', va='center')
+            ax_station.text(0.15, y_pos, f"{station['name']}:", fontsize=10, weight='bold', va='center')
             ax_station.text(0.45, y_pos, f"{wait_time:.1f} min", fontsize=10, va='center', ha='right')
             ax_station.text(0.55, y_pos, icons, fontsize=12, va='center')
 
         plt.pause(VIS_PAUSE)
 
+print("Simulation finished")
 plt.ioff()
 plt.show()
 
