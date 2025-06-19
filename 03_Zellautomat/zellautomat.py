@@ -4,18 +4,20 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import dijkstra_algorithm as dj
 
+# Set Debug Level
+DEBUG_LEVEL = 2         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
+
 # Define constants
-CELL_PED = 2   # cell state: pedestrian
-CELL_OBS = 0  # cell state: obstacle
-CELL_EMP = 1   # cell state: empty
+CELL_PED = 2            # cell state: pedestrian
+CELL_OBS = 0            # cell state: obstacle
+CELL_EMP = 1            # cell state: empty
 
-VIS_PAUSE = 0.000001  # time [s] between two visual updates
-VIS_STEPS = 5    # stride [steps] between two visual updates
-MAX_TIME = 3000   # Max Timesteps before the simulation stops
-TIME_PER_STEP = 0.3  # The amount of real time that each time step symbolizes
+VIS_PAUSE = 0.000001    # time [s] between two visual updates
+VIS_STEPS = 5           # stride [steps] between two visual updates
+MAX_TIME = 3000         # Max Timesteps before the simulation stops
+TIME_PER_STEP = 0.3     # The amount of real time that each time step symbolizes
 
-
-STATION_ORDER = 0 # 1 = predefined, 1 = random, 2 = optimized
+STATION_ORDER = 0       # 1 = predefined, 1 = random, 2 = optimized
 
 # Load Grid
 emptyMap = np.load('../01_create_map_material/doc/matrixBaseOutput.npy')
@@ -37,8 +39,6 @@ WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.c
 # Load Waypoints
 STATIONS = np.load("../02_createScenarios/station_files/altstadt_2025-5-30-19%10.npy", allow_pickle=True)
 
-# Set Debug Level
-DEBUG_LEVEL = 2
 
 def reorderStations(stations):
     match STATION_ORDER:
@@ -74,7 +74,7 @@ def checkTargetReached(x, y, x_target, y_target):
         return False
 
 def prettyPrint(person):
-    string = "ID: "+ str(person['currentPos']) + "curr: " + str(person['currentPos']) + ", target: [" + str(person['goal'][0])+", "+str(person['goal'][1])+"], wp: " + str(person['waypoints'])
+    string = "ID: "+ str(person['id']) + "curr: " + str(person['currentPos']) + ", target: [" + str(person['goal'][0])+", "+str(person['goal'][1])+"], wp: " + str(person['waypoints'])
     return string
 
 def getPersonID(x,y):
@@ -292,7 +292,6 @@ while time < MAX_TIME:
         # Debug path lines
         if DEBUG_LEVEL > 0:
             for person in personalList:
-                print(person)
                 ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', linewidth=2)
 
         # Station-status
