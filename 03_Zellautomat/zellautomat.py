@@ -38,7 +38,7 @@ WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.c
 STATIONS = np.load("../02_createScenarios/station_files/altstadt_2025-5-30-19%10.npy", allow_pickle=True)
 
 # Set Debug Level
-DEBUG_LEVEL = 0
+DEBUG_LEVEL = 2
 
 def reorderStations(stations):
     match STATION_ORDER:
@@ -101,11 +101,11 @@ def updatePerson(old, new):
             if len(person['waypoints']) == 0:
                 # => Check for Exit and remove if it is one
                 if person['stations'][0] in EXIT_LIST:
-                    print("Exit reached -> removing person")
+                    if DEBUG_LEVEL > 0: print("Exit reached -> removing person")
                     removeList.append(person)
                 else:
                     # => Add to remove List. Remove from stations list. Refill wp list. Add to station queue.
-                    print("station reached")
+                    if DEBUG_LEVEL > 0: print("station reached")
                     # Add to remove List
                     removeList.append(person)
 
@@ -288,6 +288,12 @@ while time < MAX_TIME:
             ax.plot(x, y, marker='o', color='red', markersize=10)
             ax.text(x+7, y-7, str(getPersonID(y, x)), color='black', fontsize=10,
                     ha='center', va='center', weight='bold')
+
+        # Debug path lines
+        if DEBUG_LEVEL > 0:
+            for person in personalList:
+                print(person)
+                ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', linewidth=2)
 
         # Station-status
         ax_station.clear()
