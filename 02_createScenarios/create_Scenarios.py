@@ -10,8 +10,9 @@ import breath_first_search as bfs
 baseMap = np.load('../01_create_map_material/doc/matrixBaseOutput.npy')
 wp = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
 
-numPeople = 50      # defines how many people are in the scenario
-numOfTasks = 5     # defines how many tasks a person is supposed to do
+numPeople = 100              # defines how many people are in the scenario
+numOfTasks = 5              # defines how many tasks a person is supposed to do
+percentInStations = 0.2    # defines what percentage of people start of in Stations
 
 # Constants
 CELL_OBS = 0
@@ -50,21 +51,25 @@ exits, shops = extractExitsAndShopsFromWP(wp)
 
 scenarioFile = []
 for i in range(numPeople):
-    currentPerson = []
+    currentPerson = {}
+    if i > numPeople * percentInStations:
+        currentPerson['inStation'] = False
+        # set random starting points for pedestrians
+        while True:
+            x = int(float(baseMap.shape[0])*np.random.random())
+            y = int(float(baseMap.shape[1])*np.random.random())
+            if baseMap[x, y] == CELL_EMP:
+                baseMap[x, y] = CELL_PED
+                break
+        currentPerson['pos'] = [x, y]
 
-    # set random starting points for pedestrians
-    while True:
-        x = int(float(baseMap.shape[0])*np.random.random())
-        y = int(float(baseMap.shape[1])*np.random.random())
-        if baseMap[x, y] == CELL_EMP:
-            baseMap[x, y] = CELL_PED
-            break
-    currentPerson.append([x, y])
-
-    # Find the closest Waypoint to starting pos
-    foundWP = bfs.find_closest_waypoint(baseMap, (x, y), setOfWaypoint(wp))
-    currentPerson.append(foundWP)
-
+        # Find the closest Waypoint to starting pos
+        foundWP = bfs.find_closest_waypoint(baseMap, (x, y), setOfWaypoint(wp))
+        currentPerson['closestWP'] = foundWP
+    else:
+        currentPerson['inStation'] = True
+        startShop = random.choice(shops)
+        currentPerson['startShop'] = startShop
     # Add Tasks
     tempShops = shops
     shopList = []
@@ -78,7 +83,7 @@ for i in range(numPeople):
     shopList.append([exit.name, exit['x'], exit['y'], exit['comment']])
 
     # Add ShopList to currentPerson
-    currentPerson.append(shopList)
+    currentPerson['shoplist'] = shopList
 
     # Add person to scenario file
     scenarioFile.append(currentPerson)
@@ -86,7 +91,8 @@ for i in range(numPeople):
 
 today = datetime.datetime.now()
 scenarioFile = np.array(scenarioFile, dtype=object)
-np.save(f"scenario_files/altstadt_{numPeople}_{numOfTasks}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
+
+np.save(f"scenario_files/altstadt_{numPeople}_{numOfTasks}_{percentInStations}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
 
 # also save as csv if neccessary
 # df = pd.DataFrame(scenarioFile)

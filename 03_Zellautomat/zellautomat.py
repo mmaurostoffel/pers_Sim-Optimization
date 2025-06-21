@@ -17,9 +17,9 @@ CELL_EMP = 1            # cell state: empty
 VIS_PAUSE = 0.000001    # time [s] between two visual updates
 VIS_STEPS = 10          # stride [steps] between two visual updates
 MAX_TIME = 5000         # Max Timesteps before the simulation stops
-TIME_PER_STEP = 0.3     # The amount of real time that each time step symbolizes
+TIME_PER_STEP = 0.3     # The amount of real time (in seconds) that each time step symbolizes
 
-STATION_ORDER = 0       # 1 = predefined, 1 = random, 2 = optimized
+STATION_ORDER = 1       # 0 = predefined, 1 = random, 2 = optimized at Start, 3 = optimized after every Station
 
 # Load Grid
 emptyMap = np.load('../01_create_map_material/doc/matrixBaseOutput.npy')
@@ -38,13 +38,20 @@ ADJ_MATRIX = ADJ_MATRIX.to_numpy()
 # Load Waypoints
 WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
 
-# Load Waypoints
-STATIONS = np.load("../02_createScenarios/station_files/altstadt_2025-5-30-19%10.npy", allow_pickle=True)
+# Load Station Times
+STATIONS = np.load("../02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
 
+# Load Station Order
+STATIC_STATION_ORDER = np.load("../02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
 
 def reorderStations(stations):
+    endStation = stations[-1]
+    restStations = stations[:-1]
+
     match STATION_ORDER:
         case 0:  # Sort the list
+            sorted_stations = sorted(restStations, key=lambda x: list(STATIC_STATION_ORDER).index(x[0]))
+            stations = sorted_stations + [endStation]
             return stations
         case 1:  # keep randomness from scenario Builder
             return stations
@@ -209,6 +216,8 @@ def update(old, new):
                 entry['queue'].pop(0)
                 if len(entry['queue']) > 0:
                     entry['current_serv_time'] += int(entry['serv_time'])
+        # Update Full Service Time
+        entry['full_serv_time'] = int(entry['serv_time']) * len(entry['queue']) + entry['current_serv_time']
 
 def checkPeopleRemaining():
     if len(personalList) == 0:
@@ -232,53 +241,6 @@ def saveTickInfo(currHistory):
     currHistory.append(tick)
     return currHistory
 
-
-# Initialize personalList
-personalList = []
-# one person (1)
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-29-0%45.npy", allow_pickle=True)
-# one person (2)
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-31-17%53.npy", allow_pickle=True)
-# ten people
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_3_2025-5-29-0%49.npy", allow_pickle=True)
-# 50 people
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_50_5_2025-6-21-14%28.npy", allow_pickle=True)
-# 100 people
-scenario = np.load("../02_createScenarios/scenario_files/altstadt_100_5_2025-6-19-20%31.npy", allow_pickle=True)
-id = 1
-for row in scenario:
-    person = {}
-    # Set static Index
-    person['id'] = id
-    id += 1
-    # Get Starting Pos
-    x = row[0][0]
-    y = row[0][1]
-    person['currentPos'] = [x, y]
-    # Place on Board
-    old[int(x), int(y)] = CELL_PED
-
-    # Get first Waypoint
-    firstWp = row[1]
-    startNode = getWaypointIndex(firstWp[0], firstWp[1])
-
-    # Apply station orders
-    row[2] = reorderStations(row[2])
-    # Get stations
-    # person['stations'] = row[2]
-    person['stations'] = [item[0] for item in row[2]]
-
-    # Generate next Waypoints
-    wp = getWaypoints(int(startNode), int(row[2][0][0]))
-    person['waypoints'] = wp
-
-    # Get next Goal
-    goal = getWaypointCoords(wp[0])
-    person['goal'] = goal
-
-    # Add Person to personalList
-    personalList.append(person)
-
 # Initialize Station List
 stationList = []
 EXIT_LIST = []
@@ -292,12 +254,66 @@ for index, (x, y, comm) in WP_LIST.iterrows():
             station['pname'] = str(comm).replace("_", " ")
             station['serv_time'] = getStationTime(index)
             station['current_serv_time'] = 0
+            station['full_serv_time'] = 0
             station['queue'] = []
 
             stationList.append(station)
         else:
             EXIT_LIST.append(index)
 
+# Initialize personalList
+personalList = []
+# one person (1)
+scenario = np.load("../02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
+id = 1
+for currentPerson in scenario:
+    person = {}
+    # Set static Index
+    person['id'] = id
+    id += 1
+    if currentPerson['inStation'] == False:
+        # Get Starting Pos
+        x,y = currentPerson['pos']
+        person['currentPos'] = [x, y]
+        # Place on Board
+        old[int(x), int(y)] = CELL_PED
+
+        # Get first Waypoint
+        firstWp = currentPerson['closestWP']
+        startNode = getWaypointIndex(firstWp[0], firstWp[1])
+    else:
+        startShop = currentPerson['startShop']
+        x, y = startShop['x'], startShop['y']
+        person['currentPos'] = [x, y]
+
+        startNode = startShop.name
+
+    # Apply station orders
+    currentPerson['shoplist'] = reorderStations(currentPerson['shoplist'])
+    # Get stations
+    # person['stations'] = row[2]
+    person['stations'] = [item[0] for item in currentPerson['shoplist']]
+
+    # Generate next Waypoints
+    wp = getWaypoints(int(startNode), int(currentPerson['shoplist'][0][0]))
+    person['waypoints'] = wp
+
+    # Get next Goal
+    goal = getWaypointCoords(wp[0])
+    person['goal'] = goal
+
+    if currentPerson['inStation'] == False:
+        # Add Person to personalList
+        personalList.append(person)
+    else:
+        # Add Person to Station queue
+        for entry in stationList:
+            if entry['index'] == startShop.name:
+                entry['queue'].append(person)
+                if entry['current_serv_time'] == 0:
+                    entry['current_serv_time'] += int(entry['serv_time'])
+                entry['full_serv_time'] += int(entry['serv_time'])
+                break
 
 
 # Start Simulation Loop
@@ -351,7 +367,14 @@ while peopleInSim:
             # Station-status
             ax_station.clear()
             ax_station.axis('off')
-            ax_station.set_title("Stationen & Status", fontsize=12, fontweight='bold')
+            ax_station.set_title("Stationen & Status", fontsize=15, fontweight='bold')
+
+            ax_station.text(0.05, 0.9, f"ID:", fontsize=10, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.15, 0.9, f"Name:", fontsize=10, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.35, 0.9, f"Durchsch.\nWartezeit:", fontsize=10, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.55, 0.9, f"Momentane\nWartezeit", fontsize=10, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.72, 0.9, f"Gesamt\nWartezeit", fontsize=10, weight='bold',va='bottom', ha='left')
+            ax_station.text(0.90, 0.9, f"Anzahl\nPersonen", fontsize=10, weight='bold',va='bottom', ha='left')
 
             for station in stationList:
                 idx = int(station['index']) - 88
@@ -362,15 +385,20 @@ while peopleInSim:
 
                 persons_at_station = len(station['queue'])
                 wait_time = station['current_serv_time']
+                full_wait_time = station['full_serv_time']
+                default_wait_time = station['serv_time']
 
                 icons = 'o' * min(persons_at_station, 5)
                 if persons_at_station > 5:
                     icons += f" +{persons_at_station - 5}"
-                y_pos = 0.9 - idx * 0.09
+                y_pos = 0.95 - idx * 0.09
                 ax_station.text(0.05, y_pos, f"{idx}:", fontsize=10, weight='bold', va='center')
                 ax_station.text(0.15, y_pos, f"{station['name']}:", fontsize=10, weight='bold', va='center')
-                ax_station.text(0.45, y_pos, f"{wait_time:.1f} min", fontsize=10, va='center', ha='right')
-                ax_station.text(0.55, y_pos, icons, fontsize=12, va='center')
+                ax_station.text(0.35, y_pos, f"{(default_wait_time* TIME_PER_STEP / 60):.0f} min", fontsize=10, va='center')
+                ax_station.text(0.65, y_pos, f"{(wait_time* TIME_PER_STEP / 60):.1f} min", fontsize=10, va='center', ha='right')
+                ax_station.text(0.80, y_pos, f"{(full_wait_time * TIME_PER_STEP / 60):.1f} min", fontsize=10, va='center', ha='right')
+                ax_station.text(0.90, y_pos, icons, fontsize=12, va='center')
+
 
         plt.pause(VIS_PAUSE)
 
