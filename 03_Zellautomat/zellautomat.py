@@ -20,6 +20,15 @@ MAX_TIME = 5000         # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3     # The amount of real time (in seconds) that each time step symbolizes
 
 STATION_ORDER = 1       # 0 = predefined, 1 = random, 2 = optimized at Start, 3 = optimized after every Station
+match STATION_ORDER:
+    case 0:
+        STATION_ORDER_NAME = "Vordefinierte Liste"
+    case 1:
+        STATION_ORDER_NAME = "Zufälliger Ablauf"
+    case 2:
+        STATION_ORDER_NAME = "Am Start optimierte Liste"
+    case 3:
+        STATION_ORDER_NAME = "dynamisch optimirte Liste"
 
 # Load Grid
 emptyMap = np.load('../01_create_map_material/doc/matrixBaseOutput.npy')
@@ -369,6 +378,8 @@ while peopleInSim:
             ax_station.axis('off')
             ax_station.set_title("Stationen & Status", fontsize=15, fontweight='bold')
 
+
+            ax_station.text(0.5, 0.97, f"{STATION_ORDER_NAME}", fontsize=10, weight='bold',va='bottom', ha='center')
             ax_station.text(0.05, 0.9, f"ID:", fontsize=10, weight='bold', va='bottom', ha='left')
             ax_station.text(0.15, 0.9, f"Name:", fontsize=10, weight='bold', va='bottom', ha='left')
             ax_station.text(0.35, 0.9, f"Durchsch.\nWartezeit:", fontsize=10, weight='bold', va='bottom', ha='left')
@@ -380,8 +391,7 @@ while peopleInSim:
                 idx = int(station['index']) - 88
                 # Add marker
                 ax.plot(station['pos'][0], station['pos'][1], marker='o', color='green', markersize=15)
-                ax.text(station['pos'][0], station['pos'][1], str(idx), color='white', fontsize=10,
-                        ha='center', va='center', weight='bold')
+                ax.text(station['pos'][0], station['pos'][1], str(idx), color='white', fontsize=10, ha='center', va='center', weight='bold')
 
                 persons_at_station = len(station['queue'])
                 wait_time = station['current_serv_time']
