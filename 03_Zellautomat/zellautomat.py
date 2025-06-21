@@ -7,6 +7,7 @@ import keyboard
 
 # Set Debug Level
 DEBUG_LEVEL = 2         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
+PLOT_MARKERS = True    # Can be ued to turn of the plotting of the markers to analyze specific parts of the map
 
 # Define constants
 CELL_PED = 2            # cell state: pedestrian
@@ -14,7 +15,7 @@ CELL_OBS = 0            # cell state: obstacle
 CELL_EMP = 1            # cell state: empty
 
 VIS_PAUSE = 0.000001    # time [s] between two visual updates
-VIS_STEPS = 5           # stride [steps] between two visual updates
+VIS_STEPS = 10          # stride [steps] between two visual updates
 MAX_TIME = 5000         # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3     # The amount of real time that each time step symbolizes
 
@@ -84,7 +85,7 @@ def getPersonID(x,y):
             return item.get("id")
     return -1
 
-def updatePerson(old, new):
+def update(old, new):
     removeList = []
     for person in personalList:
         if time % VIS_STEPS == 0:
@@ -143,6 +144,15 @@ def updatePerson(old, new):
                     new[(x + x_move), y] = CELL_PED
                     old[(x + x_move), y] = CELL_OBS
                     person['currentPos'] = [(x + x_move), y]
+                elif old[x, (y + y_move)] == CELL_EMP and old[x, (y - y_move)] == CELL_EMP and old[(x + x_move), y] == CELL_PED:
+                    if x_move == 1:
+                        new[x, (y + y_move)] = CELL_PED
+                        old[x, (y + y_move)] = CELL_OBS
+                        person['currentPos'] = [x, (y + y_move)]
+                    else:
+                        new[x, (y - y_move)] = CELL_PED
+                        old[x, (y - y_move)] = CELL_OBS
+                        person['currentPos'] = [x, (y - y_move)]
                 elif old[x, (y + y_move)] == CELL_EMP:
                     new[x, (y + y_move)] = CELL_PED
                     old[x, (y + y_move)] = CELL_OBS
@@ -155,6 +165,15 @@ def updatePerson(old, new):
                     new[x, (y + y_move)] = CELL_PED
                     old[x, (y + y_move)] = CELL_OBS
                     person['currentPos'] = [x, (y + y_move)]
+                elif old[(x + x_move), y] == CELL_EMP and old[(x - x_move), y] == CELL_EMP and old[x, (y + y_move)] == CELL_PED:
+                    if y_move == 1:
+                        new[(x + x_move), y] = CELL_PED
+                        old[(x + x_move), y] = CELL_OBS
+                        person['currentPos'] = [(x + x_move), y]
+                    else:
+                        new[(x - x_move), y] = CELL_PED
+                        old[(x - x_move), y] = CELL_OBS
+                        person['currentPos'] = [(x - x_move), y]
                 elif old[(x + x_move), y] == CELL_EMP:
                     new[(x + x_move), y] = CELL_PED
                     old[(x + x_move), y] = CELL_OBS
@@ -191,7 +210,6 @@ def updatePerson(old, new):
                 if len(entry['queue']) > 0:
                     entry['current_serv_time'] += int(entry['serv_time'])
 
-
 def checkPeopleRemaining():
     if len(personalList) == 0:
         for station in stationList:
@@ -223,6 +241,8 @@ personalList = []
 # scenario = np.load("../02_createScenarios/scenario_files/altstadt_1_3_2025-5-31-17%53.npy", allow_pickle=True)
 # ten people
 # scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_3_2025-5-29-0%49.npy", allow_pickle=True)
+# 50 people
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_50_5_2025-6-21-14%28.npy", allow_pickle=True)
 # 100 people
 scenario = np.load("../02_createScenarios/scenario_files/altstadt_100_5_2025-6-19-20%31.npy", allow_pickle=True)
 id = 1
@@ -282,7 +302,7 @@ for index, (x, y, comm) in WP_LIST.iterrows():
 
 # Start Simulation Loop
 time = 0
-cmap = ListedColormap(['gray', 'white', 'white'])
+cmap = ListedColormap(['gray', 'white', 'red'])
 norm = BoundaryNorm([0, 0.5, 1.5, 2.5], cmap.N)
 
 # Visualisierung vorbereiten
@@ -306,7 +326,7 @@ while peopleInSim:
         if DEBUG_LEVEL == 2: print("STATION LIST = ", stationList)
 
     new = emptyMap.copy()
-    updatePerson(old, new)
+    update(old, new)
     old = new.copy()
     time += 1
 
@@ -315,40 +335,42 @@ while peopleInSim:
         # Pedestrians
         ax.cla()
         ax.imshow(old, cmap=cmap, norm=norm)
-        pedestrian_positions = np.argwhere(old == 2)
-        for y, x in pedestrian_positions:
-            ax.plot(x, y, marker='o', color='red', markersize=10)
-            ax.text(x+7, y-7, str(getPersonID(y, x)), color='black', fontsize=10,
-                    ha='center', va='center', weight='bold')
+        # ax.imshow(old[400:500, 50:100], cmap=cmap, norm=norm)
+        if PLOT_MARKERS:
+            pedestrian_positions = np.argwhere(old == 2)
+            for y, x in pedestrian_positions:
+                ax.plot(x, y, marker='o', color='red', markersize=10)
+                ax.text(x+7, y-7, str(getPersonID(y, x)), color='black', fontsize=10,
+                        ha='center', va='center', weight='bold')
 
-        # Debug path lines
-        if DEBUG_LEVEL > 0:
-            for person in personalList:
-                ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', linewidth=2)
+            # Debug path lines
+            if DEBUG_LEVEL > 0:
+                for person in personalList:
+                    ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', linewidth=2)
 
-        # Station-status
-        ax_station.clear()
-        ax_station.axis('off')
-        ax_station.set_title("Stationen & Status", fontsize=12, fontweight='bold')
-        
-        for station in stationList:
-            idx = int(station['index']) - 88
-            # Add marker
-            ax.plot(station['pos'][0], station['pos'][1], marker='o', color='green', markersize=15)
-            ax.text(station['pos'][0], station['pos'][1], str(idx), color='white', fontsize=10,
-                    ha='center', va='center', weight='bold')
+            # Station-status
+            ax_station.clear()
+            ax_station.axis('off')
+            ax_station.set_title("Stationen & Status", fontsize=12, fontweight='bold')
 
-            persons_at_station = len(station['queue'])
-            wait_time = station['current_serv_time']
+            for station in stationList:
+                idx = int(station['index']) - 88
+                # Add marker
+                ax.plot(station['pos'][0], station['pos'][1], marker='o', color='green', markersize=15)
+                ax.text(station['pos'][0], station['pos'][1], str(idx), color='white', fontsize=10,
+                        ha='center', va='center', weight='bold')
 
-            icons = 'o' * min(persons_at_station, 5)
-            if persons_at_station > 5:
-                icons += f" +{persons_at_station - 5}"
-            y_pos = 0.9 - idx * 0.09
-            ax_station.text(0.05, y_pos, f"{idx}:", fontsize=10, weight='bold', va='center')
-            ax_station.text(0.15, y_pos, f"{station['name']}:", fontsize=10, weight='bold', va='center')
-            ax_station.text(0.45, y_pos, f"{wait_time:.1f} min", fontsize=10, va='center', ha='right')
-            ax_station.text(0.55, y_pos, icons, fontsize=12, va='center')
+                persons_at_station = len(station['queue'])
+                wait_time = station['current_serv_time']
+
+                icons = 'o' * min(persons_at_station, 5)
+                if persons_at_station > 5:
+                    icons += f" +{persons_at_station - 5}"
+                y_pos = 0.9 - idx * 0.09
+                ax_station.text(0.05, y_pos, f"{idx}:", fontsize=10, weight='bold', va='center')
+                ax_station.text(0.15, y_pos, f"{station['name']}:", fontsize=10, weight='bold', va='center')
+                ax_station.text(0.45, y_pos, f"{wait_time:.1f} min", fontsize=10, va='center', ha='right')
+                ax_station.text(0.55, y_pos, icons, fontsize=12, va='center')
 
         plt.pause(VIS_PAUSE)
 
@@ -362,6 +384,7 @@ while peopleInSim:
 plt.ioff()
 plt.show()
 
+# Datenauswertung
 print(f"Simulation finished in {time} ticks")
 # print(history)
 
