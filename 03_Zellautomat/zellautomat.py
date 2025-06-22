@@ -272,8 +272,12 @@ for index, (x, y, comm) in WP_LIST.iterrows():
 
 # Initialize personalList
 personalList = []
-# one person (1)
-scenario = np.load("../02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
+# 10 People 0.2 Percent
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
+# 50 People 0.2 Percent
+scenario = np.load("../02_createScenarios/scenario_files/altstadt_50_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
+# 100 People 0.2 Percent
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
 id = 1
 for currentPerson in scenario:
     person = {}
@@ -332,11 +336,15 @@ norm = BoundaryNorm([0, 0.5, 1.5, 2.5], cmap.N)
 
 # Visualisierung vorbereiten
 import matplotlib.gridspec as gridspec
-fig = plt.figure(figsize=(18, 8))
+fig = plt.figure(figsize=(18, 11))
 gs = gridspec.GridSpec(1, 2, width_ratios=[1, 1])
 ax = fig.add_subplot(gs[0])
 ax_station = fig.add_subplot(gs[1])
 plt.ion()
+plt.tight_layout()
+fig.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
+fs_Title = 18
+fs_Text = 13
 
 # Simulationsschleife
 peopleInSim = True
@@ -360,7 +368,6 @@ while peopleInSim:
         # Pedestrians
         ax.cla()
         ax.imshow(old, cmap=cmap, norm=norm)
-        # ax.imshow(old[400:500, 50:100], cmap=cmap, norm=norm)
         if PLOT_MARKERS:
             pedestrian_positions = np.argwhere(old == 2)
             for y, x in pedestrian_positions:
@@ -368,7 +375,7 @@ while peopleInSim:
                 ax.text(x+7, y-7, str(getPersonID(y, x)), color='black', fontsize=10,
                         ha='center', va='center', weight='bold')
 
-            # Debug path lines
+            # Path lines
             if DEBUG_LEVEL > 0:
                 for person in personalList:
                     ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', linewidth=2)
@@ -376,16 +383,16 @@ while peopleInSim:
             # Station-status
             ax_station.clear()
             ax_station.axis('off')
-            ax_station.set_title("Stationen & Status", fontsize=15, fontweight='bold')
+            ax_station.set_title("Stationen & Status", fontsize=fs_Title, fontweight='bold')
 
 
-            ax_station.text(0.5, 0.97, f"{STATION_ORDER_NAME}", fontsize=10, weight='bold',va='bottom', ha='center')
-            ax_station.text(0.05, 0.9, f"ID:", fontsize=10, weight='bold', va='bottom', ha='left')
-            ax_station.text(0.15, 0.9, f"Name:", fontsize=10, weight='bold', va='bottom', ha='left')
-            ax_station.text(0.35, 0.9, f"Durchsch.\nWartezeit:", fontsize=10, weight='bold', va='bottom', ha='left')
-            ax_station.text(0.55, 0.9, f"Momentane\nWartezeit", fontsize=10, weight='bold', va='bottom', ha='left')
-            ax_station.text(0.72, 0.9, f"Gesamt\nWartezeit", fontsize=10, weight='bold',va='bottom', ha='left')
-            ax_station.text(0.90, 0.9, f"Anzahl\nPersonen", fontsize=10, weight='bold',va='bottom', ha='left')
+            ax_station.text(0.5, 0.97, f"{STATION_ORDER_NAME}", fontsize=fs_Text, weight='bold',va='bottom', ha='center')
+            ax_station.text(0.05, 0.9, f"ID:", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.15, 0.9, f"Name:", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.35, 0.9, f"Durchsch.\nWartezeit:", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.55, 0.9, f"Momentane\nWartezeit", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.72, 0.9, f"Gesamt\nWartezeit", fontsize=fs_Text, weight='bold',va='bottom', ha='left')
+            ax_station.text(0.90, 0.9, f"Anzahl\nPersonen", fontsize=fs_Text, weight='bold',va='bottom', ha='left')
 
             for station in stationList:
                 idx = int(station['index']) - 88
@@ -402,12 +409,12 @@ while peopleInSim:
                 if persons_at_station > 5:
                     icons += f" +{persons_at_station - 5}"
                 y_pos = 0.95 - idx * 0.09
-                ax_station.text(0.05, y_pos, f"{idx}:", fontsize=10, weight='bold', va='center')
-                ax_station.text(0.15, y_pos, f"{station['name']}:", fontsize=10, weight='bold', va='center')
-                ax_station.text(0.35, y_pos, f"{(default_wait_time* TIME_PER_STEP / 60):.0f} min", fontsize=10, va='center')
-                ax_station.text(0.65, y_pos, f"{(wait_time* TIME_PER_STEP / 60):.1f} min", fontsize=10, va='center', ha='right')
-                ax_station.text(0.80, y_pos, f"{(full_wait_time * TIME_PER_STEP / 60):.1f} min", fontsize=10, va='center', ha='right')
-                ax_station.text(0.90, y_pos, icons, fontsize=12, va='center')
+                ax_station.text(0.05, y_pos, f"{idx}:", fontsize=fs_Text, weight='bold', va='center')
+                ax_station.text(0.15, y_pos, f"{station['pname']}:", fontsize=fs_Text, weight='bold', va='center')
+                ax_station.text(0.35, y_pos, f"{(default_wait_time* TIME_PER_STEP / 60):.0f} min", fontsize=fs_Text, va='center')
+                ax_station.text(0.65, y_pos, f"{(wait_time* TIME_PER_STEP / 60):.1f} min", fontsize=fs_Text, va='center', ha='right')
+                ax_station.text(0.80, y_pos, f"{(full_wait_time * TIME_PER_STEP / 60):.1f} min", fontsize=fs_Text, va='center', ha='right')
+                ax_station.text(0.90, y_pos, icons, fontsize=fs_Text, va='center')
 
 
         plt.pause(VIS_PAUSE)
