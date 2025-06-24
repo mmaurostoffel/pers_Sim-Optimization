@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import dijkstra_algorithm as dj
 import keyboard
+from _04_dataVisualizer.plotData import showFinalData
 
 # Set Debug Level
 DEBUG_LEVEL = 2         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
@@ -31,7 +32,7 @@ match STATION_ORDER:
         STATION_ORDER_NAME = "dynamisch optimirte Liste"
 
 # Load Grid
-emptyMap = np.load('../01_create_map_material/doc/matrixBaseOutput.npy')
+emptyMap = np.load('../_01_create_map_material/doc/matrixBaseOutput.npy')
 old = emptyMap.copy()
 new = old.copy()
 
@@ -39,19 +40,19 @@ GRIDSIZE_X = emptyMap.shape[0]
 GRIDSIZE_Y = emptyMap.shape[1]
 
 # Load adjacency matrix
-ADJ_MATRIX = pd.read_csv('../01_create_map_material/doc/adjacencyMatrix')
+ADJ_MATRIX = pd.read_csv('../_01_create_map_material/doc/adjacencyMatrix')
 ADJ_MATRIX = ADJ_MATRIX.replace(to_replace='x', value=0, regex=True)
 ADJ_MATRIX = ADJ_MATRIX.map(pd.to_numeric, errors='coerce')
 ADJ_MATRIX = ADJ_MATRIX.to_numpy()
 
 # Load Waypoints
-WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
+WP_LIST = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
 # Load Station Times
-STATIONS = np.load("../02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
+STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
 
 # Load Station Order
-STATIC_STATION_ORDER = np.load("../02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
+STATIC_STATION_ORDER = np.load("../_02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
 
 def reorderStations(stations):
     endStation = stations[-1]
@@ -272,10 +273,12 @@ for index, (x, y, comm) in WP_LIST.iterrows():
 
 # Initialize personalList
 personalList = []
+# 1 Person
+scenario = np.load("../_02_createScenarios/scenario_files/altstadt_1_2_0.2_2025-6-24-21%19.npy", allow_pickle=True)
 # 10 People 0.2 Percent
 # scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
 # 50 People 0.2 Percent
-scenario = np.load("../02_createScenarios/scenario_files/altstadt_50_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
+# scenario = np.load("../02_createScenarios/scenario_files/altstadt_50_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
 # 100 People 0.2 Percent
 # scenario = np.load("../02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
 id = 1
@@ -389,7 +392,7 @@ while peopleInSim:
             ax_station.text(0.5, 0.97, f"{STATION_ORDER_NAME}", fontsize=fs_Text, weight='bold',va='bottom', ha='center')
             ax_station.text(0.05, 0.9, f"ID:", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
             ax_station.text(0.15, 0.9, f"Name:", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
-            ax_station.text(0.35, 0.9, f"Durchsch.\nWartezeit:", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
+            ax_station.text(0.35, 0.9, f"Wartezeit\npro Person:", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
             ax_station.text(0.55, 0.9, f"Momentane\nWartezeit", fontsize=fs_Text, weight='bold', va='bottom', ha='left')
             ax_station.text(0.72, 0.9, f"Gesamt\nWartezeit", fontsize=fs_Text, weight='bold',va='bottom', ha='left')
             ax_station.text(0.90, 0.9, f"Anzahl\nPersonen", fontsize=fs_Text, weight='bold',va='bottom', ha='left')
@@ -428,27 +431,19 @@ while peopleInSim:
 
 plt.ioff()
 plt.show()
-
-# Datenauswertung
 print(f"Simulation finished in {time} ticks")
-# print(history)
 
-# Extract time and station wait times
-times = [entry['time'] for entry in history]
-station_waits = list(zip(*[entry['stationWaitTimes'] for entry in history]))
+# Daten-Speicherung
+data = {}
+metadata = {}
+metadata['fullTime'] = time
+metadata['stationOrder'] = STATION_ORDER_NAME
+data['data'] = history
+data['metadata'] = metadata
 
-# Plot each station's wait times
-plt.figure(figsize=(12, 6))
-for i, wait_times in enumerate(station_waits):
-    plt.plot(times, wait_times, label=f'Station {i}')
+np.save(data,)
 
-plt.xlabel('Time')
-plt.ylabel('Wait Time')
-plt.title('Station Wait Times Over Time')
-plt.legend(loc='upper right', ncol=2)
-plt.grid(True)
-plt.tight_layout()
-plt.show()
+
 
 
 

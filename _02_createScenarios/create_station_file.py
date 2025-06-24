@@ -16,7 +16,7 @@ else:
     long_time = 12000 # == 60 Minutes
 
 # Load Waypoints
-WP_LIST = pd.read_csv("../01_create_map_material/doc/waypoints_modified_scaled.csv")
+WP_LIST = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
 station_file = []
 station_order = []
