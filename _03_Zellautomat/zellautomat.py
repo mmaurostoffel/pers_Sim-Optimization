@@ -5,6 +5,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 import dijkstra_algorithm as dj
 import keyboard
 from _04_dataVisualizer.plotData import showFinalData
+import datetime
 
 # Set Debug Level
 DEBUG_LEVEL = 2         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
@@ -50,6 +51,7 @@ WP_LIST = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.
 
 # Load Station Times
 STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
+print(STATIONS)
 
 # Load Station Order
 STATIC_STATION_ORDER = np.load("../_02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
@@ -227,7 +229,8 @@ def update(old, new):
                 if len(entry['queue']) > 0:
                     entry['current_serv_time'] += int(entry['serv_time'])
         # Update Full Service Time
-        entry['full_serv_time'] = int(entry['serv_time']) * len(entry['queue']) + entry['current_serv_time']
+        if len(entry['queue']) > 0:
+            entry['full_serv_time'] = int(entry['serv_time']) * (len(entry['queue'])-1) + entry['current_serv_time']
 
 def checkPeopleRemaining():
     if len(personalList) == 0:
@@ -245,9 +248,10 @@ def saveTickInfo(currHistory):
     stationWaitTimes = []
     stationQueueLength = []
     for station in stationList:
-        stationWaitTimes.append(station['current_serv_time'])
+        stationWaitTimes.append(station['full_serv_time'])
         stationQueueLength.append(len(station['queue']))
     tick['stationWaitTimes'] = stationWaitTimes
+    tick['stationQueueLength'] = stationQueueLength
     currHistory.append(tick)
     return currHistory
 
@@ -274,13 +278,13 @@ for index, (x, y, comm) in WP_LIST.iterrows():
 # Initialize personalList
 personalList = []
 # 1 Person
-scenario = np.load("../_02_createScenarios/scenario_files/altstadt_1_2_0.2_2025-6-24-21%19.npy", allow_pickle=True)
+# scenario = np.load("../_02_createScenarios/scenario_files/altstadt_1_2_0.2_2025-6-24-21%19.npy", allow_pickle=True)
 # 10 People 0.2 Percent
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_10_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
+# scenario = np.load("../_02_createScenarios/scenario_files/altstadt_10_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
 # 50 People 0.2 Percent
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_50_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
+# scenario = np.load("../_02_createScenarios/scenario_files/altstadt_50_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
 # 100 People 0.2 Percent
-# scenario = np.load("../02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
+scenario = np.load("../_02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
 id = 1
 for currentPerson in scenario:
     person = {}
@@ -438,10 +442,24 @@ data = {}
 metadata = {}
 metadata['fullTime'] = time
 metadata['stationOrder'] = STATION_ORDER_NAME
-data['data'] = history
+stationData = []
+for currStation in stationList:
+    station = {}
+    station['index'] = currStation['index']
+    station['pname'] = currStation['pname']
+    station['serv_time'] = currStation['serv_time']
+    stationData.append(station)
+metadata['stationList'] = stationData
+
+data['history'] = history
 data['metadata'] = metadata
 
-np.save(data,)
+today = datetime.datetime.now()
+data = np.array(data, dtype=object)
+np.save(f"saved_simulations/altstadt_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}", data, allow_pickle=True)
+
+showFinalData(data.item())
+
 
 
 
