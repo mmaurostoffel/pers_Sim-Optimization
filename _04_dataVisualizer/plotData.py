@@ -23,6 +23,13 @@ def showFinalData(data):
     stack_data = list(queueLengths) + [peopleOnField]
     all_labels = stationNames + ['Im Freien']
 
+    # Find halfway point
+    total_sum_per_timestep = [sum(values) for values in zip(*stack_data)]
+    initial_total_sum = total_sum_per_timestep[0]
+    half_sum = initial_total_sum / 2
+    target_index = next((i for i, val in enumerate(total_sum_per_timestep) if val <= half_sum),None)
+    target_index = target_index * TIME_PER_STEP / 60
+
     # Create a figure with two subplots (stacked vertically)
     fig, axs = plt.subplots(2, 1, figsize=(12, 10))
 
@@ -43,12 +50,17 @@ def showFinalData(data):
     axs[1].legend(loc='upper right', ncol=2)
     axs[1].grid(True)
 
+    # Plot vertical lines
+    axs[0].axvline(x=target_index, color='red', linestyle='--', label='50%-Meilenstein')
+    axs[0].text(target_index, axs[0].get_ylim()[1] * 0.9, '50%-Meilenstein', color='red',ha='center', va='bottom', backgroundcolor='white')
+    axs[1].axvline(x=target_index, color='red', linestyle='--', label='50%-Meilenstein')
+    axs[1].text(target_index, axs[1].get_ylim()[1] * 0.9, '50%-Meilenstein', color='red', ha='center', va='bottom',backgroundcolor='white')
+
     # Add general info above both plots
     info_text = f"\n\nSimulations Info:"
     info_text = f"Gesamte Simulationszeit: {fullTime * TIME_PER_STEP / 60:.0f} min\n"
     info_text += f"Station-Sortierungs Typ: {stationOrder}\n"
     info_text += f"\nStationen Wartezeiten (Summe der Wartezeiten = {sumStationTimes* TIME_PER_STEP / 60:.0f} min):\n"
-    counter=0
 
 
     for i, (name, time) in enumerate(zip(stationNames, stationTimes)):
