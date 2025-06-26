@@ -9,7 +9,7 @@ import datetime
 
 # Set Debug Level
 DEBUG_LEVEL = 0         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
-PLOT_MARKERS = True    # Can be ued to turn of the plotting of the markers to analyze specific parts of the map
+PLOT_MARKERS = True     # Can be ued to turn of the plotting of the markers to analyze specific parts of the map
 
 # Define constants
 CELL_PED = 2            # cell state: pedestrian
@@ -17,7 +17,7 @@ CELL_OBS = 0            # cell state: obstacle
 CELL_EMP = 1            # cell state: empty
 
 VIS_PAUSE = 0.000001    # time [s] between two visual updates
-VIS_STEPS = 10          # stride [steps] between two visual updates
+VIS_STEPS = 1000        # stride [steps] between two visual updates
 MAX_TIME = 5000         # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3     # The amount of real time (in seconds) that each time step symbolizes
 
@@ -50,8 +50,8 @@ ADJ_MATRIX = ADJ_MATRIX.to_numpy()
 WP_LIST = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
 # Load Station Times
-STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
-# STATIONS = np.load("../_02_createScenarios/station_files/210min_altstadt_2025-6-26-15%24.npy", allow_pickle=True)
+# STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
+STATIONS = np.load("../_02_createScenarios/station_files/210min_altstadt_2025-6-26-15%24.npy", allow_pickle=True)
 
 # Load Station Order
 STATIC_STATION_ORDER = np.load("../_02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
@@ -309,14 +309,7 @@ for index, (x, y, comm) in WP_LIST.iterrows():
 
 
 # Load Scenario File
-# 1 Person
-# scenario = np.load("../_02_createScenarios/scenario_files/altstadt_1_2_0.2_2025-6-24-21%19.npy", allow_pickle=True)
-# 10 People 0.2 Percent
-# scenario = np.load("../_02_createScenarios/scenario_files/altstadt_10_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
-# 50 People 0.2 Percent
-# scenario = np.load("../_02_createScenarios/scenario_files/altstadt_50_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
-# 100 People 0.2 Percent
-scenario = np.load("../_02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
+scenario = np.load("../_02_createScenarios/scenario_files/hauptTestreihe/altstadt_50_5_0.9_2025-6-26-20%0.npy", allow_pickle=True)
 
 # Pre-Fill full_serv_time of stations
 peopleCount = {}
@@ -509,7 +502,7 @@ data['metadata'] = metadata
 
 today = datetime.datetime.now()
 data = np.array(data, dtype=object)
-np.save(f"saved_simulations/altstadt_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}", data, allow_pickle=True)
+np.save(f"saved_simulations/hauptTestreihe/altstadt_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}", data, allow_pickle=True)
 
 showFinalData(data.item())
 

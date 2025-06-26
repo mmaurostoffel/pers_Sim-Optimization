@@ -59,6 +59,7 @@ def showFinalData(data):
     # Add general info above both plots
     info_text = f"\n\nSimulations Info:"
     info_text = f"Gesamte Simulationszeit: {fullTime * TIME_PER_STEP / 60:.0f} min\n"
+    info_text += f"50% Meilenstein: {target_index:.0f} min\n"
     info_text += f"Station-Sortierungs Typ: {stationOrder}\n"
     info_text += f"\nStationen Wartezeiten (Summe der Wartezeiten = {sumStationTimes* TIME_PER_STEP / 60:.0f} min):\n"
 
@@ -67,16 +68,14 @@ def showFinalData(data):
         wait_min = time * TIME_PER_STEP / 60
         info_text += f"|{name.ljust(12)}: {wait_min:.0f} min".ljust(25)
 
-        # Add a line break every N columns
         if (i + 1) % 5 == 0:
             info_text += "\n"
 
-
     fig.text(0.01, 0.98, "Simulations-Resultate Überblick", ha='left', va='top', fontsize=15, fontfamily='monospace')
-    fig.text(0.01, 0.95, info_text, ha='left', va='top', fontsize=10, fontfamily='monospace')
+    fig.text(0.01, 0.93, info_text, ha='left', va='top', fontsize=10, fontfamily='monospace')
 
     # Layout adjustment
-    plt.tight_layout(rect=[0, 0, 1, 0.84])  # Leave space for the subtitle
+    plt.tight_layout(rect=[0, 0, 1, 0.80])
     plt.show()
 
 def percentOutside(data):

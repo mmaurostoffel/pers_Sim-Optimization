@@ -10,9 +10,9 @@ import breath_first_search as bfs
 baseMap = np.load('../_01_create_map_material/doc/matrixBaseOutput.npy')
 wp = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
-numPeople = 50              # defines how many people are in the scenario
-numOfTasks = 3              # defines how many tasks a person is supposed to do
-percentInStations = 0.25    # defines what percentage of people start of in Stations
+numPeople = 200              # defines how many people are in the scenario
+numOfTasks = 5              # defines how many tasks a person is supposed to do
+percentInStations = 0.9    # defines what percentage of people start of in Stations
 
 # Constants
 CELL_OBS = 0
@@ -92,7 +92,7 @@ for i in range(numPeople):
 today = datetime.datetime.now()
 scenarioFile = np.array(scenarioFile, dtype=object)
 
-np.save(f"scenario_files/altstadt_{numPeople}_{numOfTasks}_{percentInStations}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
+np.save(f"scenario_files/hauptTestreihe/altstadt_{numPeople}_{numOfTasks}_{percentInStations}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
 
 # also save as csv if neccessary
 # df = pd.DataFrame(scenarioFile)
