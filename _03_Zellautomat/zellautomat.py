@@ -17,11 +17,11 @@ CELL_OBS = 0            # cell state: obstacle
 CELL_EMP = 1            # cell state: empty
 
 VIS_PAUSE = 0.000001    # time [s] between two visual updates
-VIS_STEPS = 100          # stride [steps] between two visual updates
+VIS_STEPS = 10          # stride [steps] between two visual updates
 MAX_TIME = 5000         # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3     # The amount of real time (in seconds) that each time step symbolizes
 
-STATION_ORDER = 1       # 0 = predefined, 1 = random, 2 = optimized at Start, 3 = optimized after every Station
+STATION_ORDER = 3       # 0 = predefined, 1 = random, 2 = optimized at Start, 3 = optimized after every Station
 match STATION_ORDER:
     case 0:
         STATION_ORDER_NAME = "Vordefinierte Liste"
@@ -30,7 +30,7 @@ match STATION_ORDER:
     case 2:
         STATION_ORDER_NAME = "Am Start optimierte Liste"
     case 3:
-        STATION_ORDER_NAME = "dynamisch optimirte Liste"
+        STATION_ORDER_NAME = "dynamisch optimierte Liste"
 
 # Load Grid
 emptyMap = np.load('../_01_create_map_material/doc/matrixBaseOutput.npy')
@@ -50,8 +50,8 @@ ADJ_MATRIX = ADJ_MATRIX.to_numpy()
 WP_LIST = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
 # Load Station Times
-# STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
-STATIONS = np.load("../_02_createScenarios/station_files/210min_altstadt_2025-6-26-15%24.npy", allow_pickle=True)
+STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
+# STATIONS = np.load("../_02_createScenarios/station_files/210min_altstadt_2025-6-26-15%24.npy", allow_pickle=True)
 
 # Load Station Order
 STATIC_STATION_ORDER = np.load("../_02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
@@ -68,9 +68,26 @@ def reorderStations(stations):
         case 1:  # keep randomness from scenario Builder
             return stations
         case 2:  # Use optimization
+            sorted_stations = optimizeStations(restStations)
+            stations = sorted_stations + [endStation]
             return stations
         case 3:  # Use dynamic optimization
+            sorted_stations = optimizeStations(restStations)
+            stations = sorted_stations + [endStation]
+            alwaysSortStations = True
             return stations
+
+def optimizeStations(stations):
+    # Sort stations by full_serv_time
+    stations_sorted = sorted(stationList, key=lambda x: x['full_serv_time'])
+
+    # Return the indeces of the sorted stations
+    index_sorted = [station['index'] for station in stations_sorted]
+
+    # Sort the input stations acording to index_sorted
+    #sorted_stations = sorted(stations, key=lambda y: list(index_sorted).index(y[0]))
+    sorted_stations = sorted(stations,key=lambda y: index_sorted.index(y if isinstance(y, int) else y[0]))
+    return sorted_stations
 
 def getWaypoints(lastStation, nextStation):
     path, distance = dj.getWaypoints(ADJ_MATRIX, lastStation, nextStation)
@@ -225,6 +242,19 @@ def update(old, new):
             else:
                 # Location empty: Place person back on field
                 new[int(currX), int(currY)] = CELL_PED
+                # If dynamic Station order active reorder stations
+                if STATION_ORDER == 3:
+                    # Reference Person data
+                    person = entry['queue'][0]
+                    # Reorder Stations
+                    person['stations'] = reorderStations(person['stations'])
+                    # Refill wp list.
+                    wp = getWaypoints(entry['index'], person['stations'][0])
+                    person['waypoints'] = wp
+                    # Set new goal
+                    goal = getWaypointCoords(person['waypoints'][0])
+                    person['goal'] = goal
+
                 personalList.append(entry['queue'][0])
                 # Remove from StationList
                 entry['queue'].pop(0)
@@ -277,8 +307,8 @@ for index, (x, y, comm) in WP_LIST.iterrows():
         else:
             EXIT_LIST.append(index)
 
-# Initialize personalList
-personalList = []
+
+# Load Scenario File
 # 1 Person
 # scenario = np.load("../_02_createScenarios/scenario_files/altstadt_1_2_0.2_2025-6-24-21%19.npy", allow_pickle=True)
 # 10 People 0.2 Percent
@@ -288,6 +318,26 @@ personalList = []
 # 100 People 0.2 Percent
 scenario = np.load("../_02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
 
+# Pre-Fill full_serv_time of stations
+peopleCount = {}
+for currentPerson in scenario:
+    if currentPerson['inStation'] == True:
+        startShop = currentPerson['startShop']
+        for entry in stationList:
+            if entry['index'] == startShop.name:
+                if entry['index'] in peopleCount:
+                    peopleCount[entry['index']] += 1
+                else:
+                    peopleCount[entry['index']] = 1
+
+for key in peopleCount:
+    for entry in stationList:
+        if entry['index'] == key:
+            entry['full_serv_time'] = int(entry['serv_time']) * peopleCount[key]
+
+
+# Initialize personalList
+personalList = []
 id = 1
 for currentPerson in scenario:
     person = {}
@@ -313,8 +363,8 @@ for currentPerson in scenario:
 
     # Apply station orders
     currentPerson['shoplist'] = reorderStations(currentPerson['shoplist'])
+
     # Get stations
-    # person['stations'] = row[2]
     person['stations'] = [item[0] for item in currentPerson['shoplist']]
 
     # Generate next Waypoints
@@ -337,6 +387,7 @@ for currentPerson in scenario:
                     entry['current_serv_time'] += int(entry['serv_time'])
                 entry['full_serv_time'] += int(entry['serv_time'])
                 break
+
 
 
 # Start Simulation Loop
