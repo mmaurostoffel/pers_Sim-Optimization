@@ -8,7 +8,7 @@ from _04_dataVisualizer.plotData import showFinalData
 import datetime
 
 # Set Debug Level
-DEBUG_LEVEL = 2         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
+DEBUG_LEVEL = 0         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
 PLOT_MARKERS = True    # Can be ued to turn of the plotting of the markers to analyze specific parts of the map
 
 # Define constants
@@ -17,7 +17,7 @@ CELL_OBS = 0            # cell state: obstacle
 CELL_EMP = 1            # cell state: empty
 
 VIS_PAUSE = 0.000001    # time [s] between two visual updates
-VIS_STEPS = 10          # stride [steps] between two visual updates
+VIS_STEPS = 100          # stride [steps] between two visual updates
 MAX_TIME = 5000         # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3     # The amount of real time (in seconds) that each time step symbolizes
 
@@ -50,8 +50,8 @@ ADJ_MATRIX = ADJ_MATRIX.to_numpy()
 WP_LIST = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
 # Load Station Times
-STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
-print(STATIONS)
+# STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
+STATIONS = np.load("../_02_createScenarios/station_files/210min_altstadt_2025-6-26-15%24.npy", allow_pickle=True)
 
 # Load Station Order
 STATIC_STATION_ORDER = np.load("../_02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
@@ -68,6 +68,8 @@ def reorderStations(stations):
         case 1:  # keep randomness from scenario Builder
             return stations
         case 2:  # Use optimization
+            return stations
+        case 3:  # Use dynamic optimization
             return stations
 
 def getWaypoints(lastStation, nextStation):
@@ -285,6 +287,7 @@ personalList = []
 # scenario = np.load("../_02_createScenarios/scenario_files/altstadt_50_5_0.2_2025-6-21-20%31.npy", allow_pickle=True)
 # 100 People 0.2 Percent
 scenario = np.load("../_02_createScenarios/scenario_files/altstadt_100_5_0.2_2025-6-21-20%32.npy", allow_pickle=True)
+
 id = 1
 for currentPerson in scenario:
     person = {}
@@ -383,9 +386,8 @@ while peopleInSim:
                         ha='center', va='center', weight='bold')
 
             # Path lines
-            if DEBUG_LEVEL > 0:
-                for person in personalList:
-                    ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', linewidth=2)
+            for person in personalList:
+                ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', linewidth=2)
 
             # Station-status
             ax_station.clear()

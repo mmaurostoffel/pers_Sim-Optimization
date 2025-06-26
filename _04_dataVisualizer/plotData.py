@@ -10,46 +10,7 @@ def showFinalData(data):
     stationList = meta['stationList']
     stationNames = [station['pname'] for station in stationList]
     stationTimes = [station['serv_time'] for station in stationList]
-    fullTime = meta['fullTime']
-    stationOrder = meta['stationOrder']
-
-    history = data['history']
-    # Extract time and station wait times
-    times = [entry['time']* TIME_PER_STEP / 60 for entry in history]
-    station_waits = list(zip(*[[wait * TIME_PER_STEP / 60 for wait in entry['stationWaitTimes']]for entry in history]))
-    queueLengths = list(zip(*[entry['stationQueueLength'] for entry in history]))
-    peopleOnField = list([entry['numPeopleOnField'] for entry in history])
-    stack_data = list(queueLengths) + [peopleOnField]
-    all_labels = stationNames + ['Outside']
-
-    # Plot each station's wait times
-    plt.figure(figsize=(12, 6))
-    for i, wait_times in enumerate(station_waits):
-        plt.plot(times, wait_times, label=f'{stationNames[i]}')
-
-    plt.xlabel('Time [min]')
-    plt.ylabel('Wait Time [min]')
-    plt.title('Station Wait Times Over Time')
-    plt.legend(loc='upper right', ncol=2)
-    plt.grid(True)
-    plt.tight_layout()
-
-    plt.figure(figsize=(12, 6))
-    plt.stackplot(times, *stack_data, labels=all_labels)
-
-    plt.xlabel('Time')
-    plt.ylabel('Queue Length')
-    plt.title('Station Queue Lengths Over Time')
-    plt.legend(loc='upper right', ncol=2)
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-
-def showFinalData2(data):
-    meta = data['metadata']
-    stationList = meta['stationList']
-    stationNames = [station['pname'] for station in stationList]
-    stationTimes = [station['serv_time'] for station in stationList]
+    sumStationTimes = sum(stationTimes)
     fullTime = meta['fullTime']
     stationOrder = meta['stationOrder']
 
@@ -60,7 +21,7 @@ def showFinalData2(data):
     queueLengths = list(zip(*[entry['stationQueueLength'] for entry in history]))
     peopleOnField = list([entry['numPeopleOnField'] for entry in history])
     stack_data = list(queueLengths) + [peopleOnField]
-    all_labels = stationNames + ['Outside']
+    all_labels = stationNames + ['Im Freien']
 
     # Create a figure with two subplots (stacked vertically)
     fig, axs = plt.subplots(2, 1, figsize=(12, 10))
@@ -84,9 +45,9 @@ def showFinalData2(data):
 
     # Add general info above both plots
     info_text = f"\n\nSimulations Info:"
-    info_text = f"Gesamte Simulations Zeit: {fullTime* TIME_PER_STEP / 60:.0f} min\n"
+    info_text = f"Gesamte Simulationszeit: {fullTime * TIME_PER_STEP / 60:.0f} min\n"
     info_text += f"Station-Sortierungs Typ: {stationOrder}\n"
-    info_text += "\nStationen Wartezeiten:\n"
+    info_text += f"\nStationen Wartezeiten (Summe der Wartezeiten = {sumStationTimes* TIME_PER_STEP / 60:.0f} min):\n"
     counter=0
 
 
@@ -106,6 +67,13 @@ def showFinalData2(data):
     plt.tight_layout(rect=[0, 0, 1, 0.84])  # Leave space for the subtitle
     plt.show()
 
+def percentOutside(data):
+    history = data['history']
+    times = [entry['time'] * TIME_PER_STEP / 60 for entry in history]
+    peopleOnField = list([entry['numPeopleOnField'] for entry in history])
+    plt.plot(times, peopleOnField)
+    plt.show()
+
 if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw()
@@ -113,4 +81,5 @@ if __name__ == "__main__":
     # Open the file picker dialog
     file_path = filedialog.askopenfilename(title="Select a file")
     file = np.load(file_path, allow_pickle=True).item()
-    showFinalData2(file)
+    showFinalData(file)
+    #percentOutside(file)

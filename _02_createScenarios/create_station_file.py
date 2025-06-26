@@ -3,7 +3,7 @@ import numpy as np
 import datetime
 
 # Constant Definition
-TEST_SETUP = 1
+TEST_SETUP = 0
 
 # Variable Setup
 if TEST_SETUP == 1:
