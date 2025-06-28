@@ -30,6 +30,11 @@ def showFinalData(data):
     target_index = next((i for i, val in enumerate(total_sum_per_timestep) if val <= half_sum),None)
     target_index = target_index * TIME_PER_STEP / 60
 
+    threeQuarter_sum = initial_total_sum *0.75
+    target_75_index = next((i for i, val in enumerate(total_sum_per_timestep) if val <= threeQuarter_sum), None)
+    target_75_index = target_75_index * TIME_PER_STEP / 60
+    print(target_75_index)
+
     # Create a figure with two subplots (stacked vertically)
     fig, axs = plt.subplots(2, 1, figsize=(12, 10))
 

@@ -3,13 +3,13 @@ import numpy as np
 import datetime
 
 # Constant Definition
-TEST_SETUP = 0
+TEST_SETUP = 1
 
 # Variable Setup
 if TEST_SETUP == 1:
     short_time = 200 # == 1 Minute
     medium_time = 600 # == 3 Minutes
-    long_time = 1000 # == 5 Minutes
+    long_time = 1200 # == 6 Minutes
 else:
     short_time = 2000 # == 10 Minute
     medium_time = 6000 # == 30 Minutes

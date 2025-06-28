@@ -51,7 +51,7 @@ WP_LIST = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.
 
 # Load Station Times
 # STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
-STATIONS = np.load("../_02_createScenarios/station_files/210min_altstadt_2025-6-26-15%24.npy", allow_pickle=True)
+STATIONS = np.load("../_02_createScenarios/station_files/22min_altstadt_2025-6-28-1%46.npy", allow_pickle=True)
 
 # Load Station Order
 STATIC_STATION_ORDER = np.load("../_02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
@@ -309,7 +309,8 @@ for index, (x, y, comm) in WP_LIST.iterrows():
 
 
 # Load Scenario File
-scenario = np.load("../_02_createScenarios/scenario_files/hauptTestreihe/altstadt_50_5_0.9_2025-6-26-20%0.npy", allow_pickle=True)
+scenario = np.load("../_02_createScenarios/scenario_files/hauptTestreihe/altstadt_500_5_0.9_2025-6-27-13%39.npy", allow_pickle=True)
+# scenario = np.load("../_02_createScenarios/scenario_files/VersuchsScenarios/altstadt_500_5_0_2025-6-27-13%36.npy", allow_pickle=True)
 
 # Pre-Fill full_serv_time of stations
 peopleCount = {}
