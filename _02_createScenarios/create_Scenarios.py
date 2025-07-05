@@ -10,9 +10,10 @@ import breath_first_search as bfs
 baseMap = np.load('../_01_create_map_material/doc/matrixBaseOutput.npy')
 wp = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
-numPeople = 500              # defines how many people are in the scenario
-numOfTasks = 5              # defines how many tasks a person is supposed to do
-percentInStations = 0    # defines what percentage of people start of in Stations
+numPeople = 500                 # defines how many people are in the scenario
+numOfTasks = 5                  # defines how many tasks a person is supposed to do
+percentInStations = 0.9           # defines what percentage of people start of in Stations
+alwaysSameStations = True       # defines if the entire station pool is used or only a subsection
 
 # Constants
 CELL_OBS = 0
@@ -46,8 +47,26 @@ def setOfWaypoint(wp):
             waypoints.append((x, y))
         return waypoints
 
+def filterShops(shops):
+    filter = [91, 94, 97, 89, 95]
+    sorted_shops = [entry for entry in shops if entry.name in filter]
+    return sorted_shops
+
+def preSelectStations(shops):
+    tempShops = shops
+    globalShopList = []
+    for j in range(numOfTasks):
+        elem = random.choice(tempShops)
+        tempShops = [item for item in tempShops if not item.equals(elem)]
+        globalShopList.append(elem)
+    return globalShopList
+
 # Extract shops and exits from waypoint file
 exits, shops = extractExitsAndShopsFromWP(wp)
+#if alwaysSameStations:
+#    shops = preSelectStations(shops)
+
+shops = filterShops(shops)
 
 scenarioFile = []
 for i in range(numPeople):
@@ -92,7 +111,7 @@ for i in range(numPeople):
 today = datetime.datetime.now()
 scenarioFile = np.array(scenarioFile, dtype=object)
 
-np.save(f"scenario_files/hauptTestreihe/altstadt_{numPeople}_{numOfTasks}_{percentInStations}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
+np.save(f"scenario_files/new_Haupttestreihe/altstadt_{numPeople}_{numOfTasks}_{percentInStations}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
 
 # also save as csv if neccessary
 # df = pd.DataFrame(scenarioFile)

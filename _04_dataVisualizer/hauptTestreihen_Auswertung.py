@@ -2,17 +2,17 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 # Load and transpose
-full_210 = pd.read_csv("doc/210min/fullTimes.csv", header=None).T
-quarter_210 = pd.read_csv("doc/210min/threeQuarterTimes.csv", header=None).T
-half_210 = pd.read_csv("doc/210min/halfTimes.csv", header=None).T
+full_210 = pd.read_csv("doc/vorBesprechung/210min/fullTimes.csv", header=None).T
+quarter_210 = pd.read_csv("doc/vorBesprechung/210min/threeQuarterTimes.csv", header=None).T
+half_210 = pd.read_csv("doc/vorBesprechung/210min/halfTimes.csv", header=None).T
 
-full_220 = pd.read_csv("doc/220min/fullTimes.csv", header=None).T
-quarter_220 = pd.read_csv("doc/220min/threeQuarterTimes.csv", header=None).T
-half_220 = pd.read_csv("doc/220min/halfTimes.csv", header=None).T
+full_220 = pd.read_csv("doc/vorBesprechung/220min/fullTimes.csv", header=None).T
+quarter_220 = pd.read_csv("doc/vorBesprechung/220min/threeQuarterTimes.csv", header=None).T
+half_220 = pd.read_csv("doc/vorBesprechung/220min/halfTimes.csv", header=None).T
 
-full_22 = pd.read_csv("doc/22min/fullTimes.csv", header=None).T
-quarter_22 = pd.read_csv("doc/22min/threeQuarterTimes.csv", header=None).T
-half_22 = pd.read_csv("doc/22min/halfTimes.csv", header=None).T
+full_22 = pd.read_csv("doc/vorBesprechung/22min/fullTimes.csv", header=None).T
+quarter_22 = pd.read_csv("doc/vorBesprechung/22min/threeQuarterTimes.csv", header=None).T
+half_22 = pd.read_csv("doc/vorBesprechung/22min/halfTimes.csv", header=None).T
 
 
 

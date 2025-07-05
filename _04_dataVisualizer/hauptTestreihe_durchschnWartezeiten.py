@@ -15,9 +15,9 @@ def getMean(data):
     print(round(np.mean(all_waits),0))
 
 def plotData():
-    tr1 = pd.read_csv("doc/durchschnittsWartezeiten/tr1.csv", header=None).T
-    tr2 = pd.read_csv("doc/durchschnittsWartezeiten/tr2.csv", header=None).T
-    tr3 = pd.read_csv("doc/durchschnittsWartezeiten/tr3.csv", header=None).T
+    tr1 = pd.read_csv("doc/vorBesprechung/durchschnittsWartezeiten/tr1.csv", header=None).T
+    tr2 = pd.read_csv("doc/vorBesprechung/durchschnittsWartezeiten/tr2.csv", header=None).T
+    tr3 = pd.read_csv("doc/vorBesprechung/durchschnittsWartezeiten/tr3.csv", header=None).T
 
     numPeople = [10, 50, 100, 200, 500]
     stationOrders = ["Vordefinierte Liste", "dynamisch optimierte Liste"]

@@ -6,6 +6,7 @@ import dijkstra_algorithm as dj
 import keyboard
 from _04_dataVisualizer.plotData import showFinalData
 import datetime
+import random
 
 # Set Debug Level
 DEBUG_LEVEL = 0         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
@@ -17,20 +18,29 @@ CELL_OBS = 0            # cell state: obstacle
 CELL_EMP = 1            # cell state: empty
 
 VIS_PAUSE = 0.000001    # time [s] between two visual updates
-VIS_STEPS = 1000        # stride [steps] between two visual updates
+VIS_STEPS = 100000       # stride [steps] between two visual updates
+STEP_UPDATES = 1000       # stride [steps] between two visual updates
 MAX_TIME = 5000         # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3     # The amount of real time (in seconds) that each time step symbolizes
 
-STATION_ORDER = 3       # 0 = predefined, 1 = random, 2 = optimized at Start, 3 = optimized after every Station
+STATION_ORDER = 0
+# 0 = predefined, 1 = predefined with random start, 2 = random, 3 = optimized at Start, 4 = optimized after every Station
 match STATION_ORDER:
     case 0:
         STATION_ORDER_NAME = "Vordefinierte Liste"
+        USE_FIRST_STATION_AS_START = True
     case 1:
-        STATION_ORDER_NAME = "Zufälliger Ablauf"
+        STATION_ORDER_NAME = "Vordefinierte Liste mit zufälliger Startstation"
+        USE_FIRST_STATION_AS_START = True
     case 2:
-        STATION_ORDER_NAME = "Am Start optimierte Liste"
+        STATION_ORDER_NAME = "Zufälliger Ablauf"
+        USE_FIRST_STATION_AS_START = False
     case 3:
+        STATION_ORDER_NAME = "Am Start optimierte Liste"
+        USE_FIRST_STATION_AS_START = False
+    case 4:
         STATION_ORDER_NAME = "dynamisch optimierte Liste"
+        USE_FIRST_STATION_AS_START = False
 
 # Load Grid
 emptyMap = np.load('../_01_create_map_material/doc/matrixBaseOutput.npy')
@@ -65,16 +75,22 @@ def reorderStations(stations):
             sorted_stations = sorted(restStations, key=lambda x: list(STATIC_STATION_ORDER).index(x[0]))
             stations = sorted_stations + [endStation]
             return stations
-        case 1:  # keep randomness from scenario Builder
+        case 1:  # Sort the list with random start
+            sorted_stations = sorted(restStations, key=lambda x: list(STATIC_STATION_ORDER).index(x[0]))
+            element = random.choice(sorted_stations)
+            sorted_stations.remove(element)
+            sorted_stations.insert(0, element)
+            stations = sorted_stations + [endStation]
             return stations
-        case 2:  # Use optimization
+        case 2:  # keep randomness from scenario Builder
+            return stations
+        case 3:  # Use optimization
             sorted_stations = optimizeStations(restStations)
             stations = sorted_stations + [endStation]
             return stations
-        case 3:  # Use dynamic optimization
+        case 4:  # Use dynamic optimization
             sorted_stations = optimizeStations(restStations)
             stations = sorted_stations + [endStation]
-            alwaysSortStations = True
             return stations
 
 def optimizeStations(stations):
@@ -243,7 +259,7 @@ def update(old, new):
                 # Location empty: Place person back on field
                 new[int(currX), int(currY)] = CELL_PED
                 # If dynamic Station order active reorder stations
-                if STATION_ORDER == 3:
+                if STATION_ORDER == 4:
                     # Reference Person data
                     person = entry['queue'][0]
                     # Reorder Stations
@@ -287,6 +303,22 @@ def saveTickInfo(currHistory):
     currHistory.append(tick)
     return currHistory
 
+def applyStartShops(currentPerson):
+    if USE_FIRST_STATION_AS_START:
+        startShop = currentPerson['shoplist'][0]
+        currentPerson['shoplist'].pop(0)
+
+        start_Shop = pd.Series(
+            data=[startShop[2], startShop[1], startShop[3]],
+            index=['y', 'x', 'comment'],
+            name=startShop[0]
+        )
+        currentPerson['startShop'] = start_Shop
+        return currentPerson
+    else:
+        currentPerson['shoplist'].pop(0)
+        return currentPerson
+
 # Initialize Station List
 stationList = []
 EXIT_LIST = []
@@ -309,13 +341,16 @@ for index, (x, y, comm) in WP_LIST.iterrows():
 
 
 # Load Scenario File
-scenario = np.load("../_02_createScenarios/scenario_files/hauptTestreihe/altstadt_500_5_0.9_2025-6-27-13%39.npy", allow_pickle=True)
+scenario = np.load("../_02_createScenarios/scenario_files/new_Haupttestreihe/altstadt_100_5_0.9_2025-7-5-16%30.npy", allow_pickle=True)
 # scenario = np.load("../_02_createScenarios/scenario_files/VersuchsScenarios/altstadt_500_5_0_2025-6-27-13%36.npy", allow_pickle=True)
 
 # Pre-Fill full_serv_time of stations
 peopleCount = {}
 for currentPerson in scenario:
+    # Apply station orders
+    currentPerson['shoplist'] = reorderStations(currentPerson['shoplist'])
     if currentPerson['inStation'] == True:
+        currentPerson = applyStartShops(currentPerson)
         startShop = currentPerson['startShop']
         for entry in stationList:
             if entry['index'] == startShop.name:
@@ -418,6 +453,9 @@ while peopleInSim:
     old = new.copy()
     time += 1
 
+    if time % STEP_UPDATES == 0:
+        print(time)
+
     if time % VIS_STEPS == 0:
 
         # Pedestrians
@@ -480,9 +518,10 @@ while peopleInSim:
     if keyboard.is_pressed('q'):
         break
 
+print(f"Simulation finished in {time} ticks")
 plt.ioff()
 plt.show()
-print(f"Simulation finished in {time} ticks")
+
 
 # Daten-Speicherung
 data = {}
@@ -503,7 +542,7 @@ data['metadata'] = metadata
 
 today = datetime.datetime.now()
 data = np.array(data, dtype=object)
-np.save(f"saved_simulations/hauptTestreihe/altstadt_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}", data, allow_pickle=True)
+np.save(f"saved_simulations/newHaupttestreihe/altstadt_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}", data, allow_pickle=True)
 
 showFinalData(data.item())
 
