@@ -9,19 +9,21 @@ import datetime
 import random
 
 # Set Debug Level
-DEBUG_LEVEL = 0         # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
-PLOT_MARKERS = True     # Can be ued to turn of the plotting of the markers to analyze specific parts of the map
+DEBUG_LEVEL = 0             # Set Debug level, 0 = No Debug Messages, 1 = some Debug messages, 2 = Full Debug messages and Target-Lines
+PLOT_MARKERS = True         # Can be ued to turn of the plotting of the markers to analyze specific parts of the map
 
 # Define constants
-CELL_PED = 2            # cell state: pedestrian
-CELL_OBS = 0            # cell state: obstacle
-CELL_EMP = 1            # cell state: empty
+CELL_PED = 2                # cell state: pedestrian
+CELL_OBS = 0                # cell state: obstacle
+CELL_EMP = 1                # cell state: empty
 
-VIS_PAUSE = 0.000001    # time [s] between two visual updates
-VIS_STEPS = 100000     # stride [steps] between two visual updates
-STEP_UPDATES = 1000       # stride [steps] between two visual updates
-MAX_TIME = 5000         # Max Timesteps before the simulation stops
-TIME_PER_STEP = 0.3     # The amount of real time (in seconds) that each time step symbolizes
+VIS_PAUSE = 0.000001        # time [s] between two visual updates
+VIS_STEPS = 10          # stride [steps] between two visual updates
+STEP_UPDATES = 1000         # stride [steps] between two visual updates
+MAX_TIME = 5000             # Max Timesteps before the simulation stops
+TIME_PER_STEP = 0.3         # The amount of real time (in seconds) that each time step symbolizes
+
+SET_PERSON_VISIBILITY = 10  # If this Value is set to a number other than -1 this person will be made more visible
 
 STATION_ORDER = 4
 # 0 = predefined, 1 = predefined with random start, 2 = random, 3 = optimized at Start, 4 = optimized after every Station
@@ -464,13 +466,23 @@ while peopleInSim:
         if PLOT_MARKERS:
             pedestrian_positions = np.argwhere(old == 2)
             for y, x in pedestrian_positions:
-                ax.plot(x, y, marker='o', color='red', markersize=10)
-                ax.text(x+7, y-7, str(getPersonID(y, x)), color='black', fontsize=10,
+                currID = getPersonID(y, x)
+                currAlpha = 1
+                if SET_PERSON_VISIBILITY > -1:
+                    if currID != SET_PERSON_VISIBILITY:
+                        currAlpha = 0.2
+                ax.plot(x, y, marker='o', color='red', alpha=currAlpha, markersize=10)
+                ax.text(x+7, y-7, str(currID), color='black', alpha=currAlpha, fontsize=10,
                         ha='center', va='center', weight='bold')
 
             # Path lines
             for person in personalList:
-                ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', linewidth=2)
+                currID = person['id']
+                currAlpha = 1
+                if SET_PERSON_VISIBILITY > -1:
+                    if currID != SET_PERSON_VISIBILITY:
+                        currAlpha = 0.2
+                ax.plot([person['currentPos'][1], person['goal'][1]], [person['currentPos'][0], person['goal'][0]], color='red', alpha=currAlpha, linewidth=2)
 
             # Station-status
             ax_station.clear()
