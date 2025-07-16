@@ -10,8 +10,8 @@ import breath_first_search as bfs
 baseMap = np.load('../_01_create_map_material/doc/matrixBaseOutput.npy')
 wp = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
-numPeople = 500                 # defines how many people are in the scenario
-numOfTasks = 5                  # defines how many tasks a person is supposed to do
+numPeople = 200                 # defines how many people are in the scenario
+numOfTasks = 10                  # defines how many tasks a person is supposed to do
 percentInStations = 0.9           # defines what percentage of people start of in Stations
 alwaysSameStations = True       # defines if the entire station pool is used or only a subsection
 
@@ -48,7 +48,8 @@ def setOfWaypoint(wp):
         return waypoints
 
 def filterShops(shops):
-    filter = [91, 94, 97, 89, 95]
+    #filter = [91, 94, 97, 89, 95]
+    filter = [89, 90, 91, 92, 93, 94, 95, 96, 97, 98]
     sorted_shops = [entry for entry in shops if entry.name in filter]
     return sorted_shops
 
@@ -111,7 +112,7 @@ for i in range(numPeople):
 today = datetime.datetime.now()
 scenarioFile = np.array(scenarioFile, dtype=object)
 
-np.save(f"scenario_files/new_Haupttestreihe/altstadt_{numPeople}_{numOfTasks}_{percentInStations}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
+np.save(f"scenario_files/new_Haupttestreihe/ALL_altstadt_{numPeople}_{numOfTasks}_{percentInStations}_{today.year}-{today.month}-{today.day}-{today.hour}%{today.minute}",scenarioFile, allow_pickle=True)
 
 # also save as csv if neccessary
 # df = pd.DataFrame(scenarioFile)

@@ -18,12 +18,12 @@ CELL_OBS = 0            # cell state: obstacle
 CELL_EMP = 1            # cell state: empty
 
 VIS_PAUSE = 0.000001    # time [s] between two visual updates
-VIS_STEPS = 100000       # stride [steps] between two visual updates
+VIS_STEPS = 100000     # stride [steps] between two visual updates
 STEP_UPDATES = 1000       # stride [steps] between two visual updates
 MAX_TIME = 5000         # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3     # The amount of real time (in seconds) that each time step symbolizes
 
-STATION_ORDER = 0
+STATION_ORDER = 4
 # 0 = predefined, 1 = predefined with random start, 2 = random, 3 = optimized at Start, 4 = optimized after every Station
 match STATION_ORDER:
     case 0:
@@ -61,7 +61,7 @@ WP_LIST = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.
 
 # Load Station Times
 # STATIONS = np.load("../_02_createScenarios/station_files/altstadt_TEST_SETUP_2025-6-21-18%44.npy", allow_pickle=True)
-STATIONS = np.load("../_02_createScenarios/station_files/22min_altstadt_2025-6-28-1%46.npy", allow_pickle=True)
+STATIONS = np.load("../_02_createScenarios/station_files/21min_altstadt__2025-6-28-1%27.npy", allow_pickle=True)
 
 # Load Station Order
 STATIC_STATION_ORDER = np.load("../_02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
@@ -341,7 +341,7 @@ for index, (x, y, comm) in WP_LIST.iterrows():
 
 
 # Load Scenario File
-scenario = np.load("../_02_createScenarios/scenario_files/new_Haupttestreihe/altstadt_100_5_0.9_2025-7-5-16%30.npy", allow_pickle=True)
+scenario = np.load("../_02_createScenarios/scenario_files/new_Haupttestreihe/ALL_altstadt_500_10_0.9_2025-7-11-14%37.npy", allow_pickle=True)
 # scenario = np.load("../_02_createScenarios/scenario_files/VersuchsScenarios/altstadt_500_5_0_2025-6-27-13%36.npy", allow_pickle=True)
 
 # Pre-Fill full_serv_time of stations

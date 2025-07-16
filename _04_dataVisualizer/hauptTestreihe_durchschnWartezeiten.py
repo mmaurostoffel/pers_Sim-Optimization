@@ -15,22 +15,27 @@ def getMean(data):
     print(round(np.mean(all_waits),0))
 
 def plotData():
-    tr1 = pd.read_csv("doc/vorBesprechung/durchschnittsWartezeiten/tr1.csv", header=None).T
-    tr2 = pd.read_csv("doc/vorBesprechung/durchschnittsWartezeiten/tr2.csv", header=None).T
-    tr3 = pd.read_csv("doc/vorBesprechung/durchschnittsWartezeiten/tr3.csv", header=None).T
+    tr1 = pd.read_csv("doc/nachBesprechung/durchschnittsWartezeiten/tr1.csv", header=None).T
+    tr2 = pd.read_csv("doc/nachBesprechung/durchschnittsWartezeiten/tr2.csv", header=None).T
+    tr3 = pd.read_csv("doc/nachBesprechung/durchschnittsWartezeiten/tr3.csv", header=None).T
+    tr4 = pd.read_csv("doc/nachBesprechung/durchschnittsWartezeiten/tr4.csv", header=None).T
+
 
     numPeople = [10, 50, 100, 200, 500]
     stationOrders = ["Vordefinierte Liste", "dynamisch optimierte Liste"]
 
     plt.figure(figsize=(10, 6))
-    plt.plot(numPeople, tr1.iloc[0], 'o-', color="blue", label=f"⌀ Wartezeiten TR1: {stationOrders[0]}")
-    plt.plot(numPeople, tr1.iloc[1], 'o--', color="blue", label=f"⌀ Wartezeiten TR1: {stationOrders[1]}")
-    plt.plot(numPeople, tr2.iloc[0], 'o-', color="orange", label=f"⌀ Wartezeiten TR2: {stationOrders[0]}")
-    plt.plot(numPeople, tr2.iloc[1], 'o--', color="orange", label=f"⌀ Wartezeiten TR2: {stationOrders[1]}")
-    plt.plot(numPeople, tr3.iloc[0], 'o-', color="green", label=f"⌀ Wartezeiten TR3: {stationOrders[0]}")
-    plt.plot(numPeople, tr3.iloc[1], 'o--', color="green", label=f"⌀ Wartezeiten TR3: {stationOrders[1]}")
-    plt.title("Durchschnittliche Wartezeiten der Testreihen 1, 2 und 3")
+    plt.plot(numPeople, tr1.iloc[0]/tr1.iloc[1], 'o-', color="blue", label=f"Vergleich ⌀-Wartezeiten TR1")
+    plt.plot(numPeople, tr2.iloc[0]/tr2.iloc[1], 'o-', color="orange", label=f"Vergleich ⌀-Wartezeiten TR2")
+    plt.plot(numPeople, tr3.iloc[0]/tr3.iloc[1], 'o-', color="green", label=f"Vergleich ⌀-Wartezeiten TR3")
+    plt.plot(numPeople, tr4.iloc[0]/tr4.iloc[1], 'o-', color="purple", label=f"Vergleich ⌀-Wartezeiten TR4")
+    plt.title("Vergleich der durchschnittlichen Wartezeiten der Testreihen 1, 2, 3 und 4")
     plt.legend(loc="best")
+    plt.hlines(y=1, xmin=-100, xmax=600, linestyle="--", color="red")
+    plt.xlim([0, 510])
+    plt.ylim([0, 2.1])
+    plt.xlabel("Anzahl Personen")
+    plt.ylabel("Durchschnittliche Wartezeiten (Vordef. / Dyn. Stationeliste)")
     plt.grid(True)
     plt.show()
 
