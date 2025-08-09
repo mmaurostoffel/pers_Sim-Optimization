@@ -14,32 +14,40 @@ files = {
     "50% Meilensteine 4. Testreihe": "doc/nachBesprechung/21minAll/halfTimes.csv",
 }
 
-
 people_counts = [10, 50, 100, 200, 500]
 colors = ['blue', 'blue', 'red', 'red', 'green', 'green', 'orange', 'orange']
 quotients = {}
 
+# Quotienten berechnen
 for key, path in files.items():
     df = pd.read_csv(path, header=None)
     quot = df.iloc[:, 0] / df.iloc[:, -1]
     quotients[key] = quot
 
-# Vordefiniert / dynamisch -->
-
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(12, 7))
 counter = 0
+
 for key, q in quotients.items():
-    if counter == 0 or counter == 2 or counter == 4 or counter == 6:
+    if counter % 2 == 0:  # Nur "Gesamte Simulationszeit" Linien
         plt.plot(people_counts, q, 'o-', label=key, color=colors[counter])
-    else:
-        plt.plot(people_counts, q, 'o--', label=key, color=colors[counter])
+
+        # Durchschnitt berechnen und Linie zeichnen
+        avg = np.mean(q)
+        plt.hlines(avg, people_counts[0], people_counts[-1], color=colors[counter], linestyle='--', linewidth=1.5)
+
+        # Marker und Text am rechten Rand der Linie
+        plt.plot(people_counts[-1], avg, 's', color=colors[counter])
+        #plt.text(people_counts[-1] + 10, avg, f'{avg:.2f}', va='center', fontsize=12, color=colors[counter])
+
+        print(key)
+        print(avg)
+
     counter += 1
-    print(key)
-    print(np.mean(q))
 
 plt.xlabel('Anzahl Personen')
 plt.ylabel('Quotient (Vordefinierte Stationeliste / dynamische Stationeliste)')
 plt.title('Quotient (Vordefinierte Stationeliste / dynamische Stationeliste)')
 plt.legend()
 plt.grid(True)
+plt.tight_layout()
 plt.show()

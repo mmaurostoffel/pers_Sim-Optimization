@@ -23,7 +23,9 @@ STEP_UPDATES = 1000         # stride [steps] between two visual updates
 MAX_TIME = 5000             # Max Timesteps before the simulation stops
 TIME_PER_STEP = 0.3         # The amount of real time (in seconds) that each time step symbolizes
 
-SET_PERSON_VISIBILITY = 10  # If this Value is set to a number other than -1 this person will be made more visible
+SET_PERSON_VISIBILITY = -1  # If this Value is set to a number other than -1 this person will be made more visible
+SET_PRESENTATION = True     # If this value is set to True, the Simulation will switch to 100 VIS_STEPS after SET_PRESENTATION_TIME TIcks
+SET_PRESENTATION_TIME = 2000
 
 STATION_ORDER = 4
 # 0 = predefined, 1 = predefined with random start, 2 = random, 3 = optimized at Start, 4 = optimized after every Station
@@ -67,6 +69,9 @@ STATIONS = np.load("../_02_createScenarios/station_files/21min_altstadt__2025-6-
 
 # Load Station Order
 STATIC_STATION_ORDER = np.load("../_02_createScenarios/statio_order_fils/altstadt_STATION_ORDER_2025-6-21-19%2.npy", allow_pickle=True)
+
+# Load Scenario File
+scenario = np.load("../_02_createScenarios/scenario_files/VersuchsScenarios/Vorführung.npy", allow_pickle=True)
 
 def reorderStations(stations):
     endStation = stations[-1]
@@ -341,11 +346,6 @@ for index, (x, y, comm) in WP_LIST.iterrows():
         else:
             EXIT_LIST.append(index)
 
-
-# Load Scenario File
-scenario = np.load("../_02_createScenarios/scenario_files/new_Haupttestreihe/ALL_altstadt_500_10_0.9_2025-7-11-14%37.npy", allow_pickle=True)
-# scenario = np.load("../_02_createScenarios/scenario_files/VersuchsScenarios/altstadt_500_5_0_2025-6-27-13%36.npy", allow_pickle=True)
-
 # Pre-Fill full_serv_time of stations
 peopleCount = {}
 for currentPerson in scenario:
@@ -455,11 +455,14 @@ while peopleInSim:
     old = new.copy()
     time += 1
 
+    if SET_PRESENTATION:
+        if time > SET_PRESENTATION_TIME:
+            VIS_STEPS = 100
+
     if time % STEP_UPDATES == 0:
         print(time)
 
     if time % VIS_STEPS == 0:
-
         # Pedestrians
         ax.cla()
         ax.imshow(old, cmap=cmap, norm=norm)

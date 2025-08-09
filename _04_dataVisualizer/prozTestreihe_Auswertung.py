@@ -24,5 +24,7 @@ if __name__ == "__main__":
 
         percentOutside(file)
     plt.legend(["10%", "25%", "50%", "75%", "90%", ])
-    plt.title("Anzahl Personen auf dem Simulationsgebiet übr die Zeit")
+    plt.title("Anzahl Personen auf dem Simulationsgebiet über die Zeit")
+    plt.xlabel('Zeit ins Simulations-Iterationen')
+    plt.ylabel('Anzahl Personen auf dem Simulationsgebiet')
     plt.show()

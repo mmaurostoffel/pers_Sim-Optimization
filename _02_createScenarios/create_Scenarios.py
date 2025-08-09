@@ -10,8 +10,8 @@ import breath_first_search as bfs
 baseMap = np.load('../_01_create_map_material/doc/matrixBaseOutput.npy')
 wp = pd.read_csv("../_01_create_map_material/doc/waypoints_modified_scaled.csv")
 
-numPeople = 200                 # defines how many people are in the scenario
-numOfTasks = 10                  # defines how many tasks a person is supposed to do
+numPeople = 100                 # defines how many people are in the scenario
+numOfTasks = 2                  # defines how many tasks a person is supposed to do
 percentInStations = 0.9           # defines what percentage of people start of in Stations
 alwaysSameStations = True       # defines if the entire station pool is used or only a subsection
 

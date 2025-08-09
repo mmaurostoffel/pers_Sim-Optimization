@@ -26,9 +26,9 @@ def plotData():
 
     plt.figure(figsize=(10, 6))
     plt.plot(numPeople, tr1.iloc[0]/tr1.iloc[1], 'o-', color="blue", label=f"Vergleich ⌀-Wartezeiten TR1")
-    plt.plot(numPeople, tr2.iloc[0]/tr2.iloc[1], 'o-', color="orange", label=f"Vergleich ⌀-Wartezeiten TR2")
+    plt.plot(numPeople, tr2.iloc[0]/tr2.iloc[1], 'o-', color="red", label=f"Vergleich ⌀-Wartezeiten TR2")
     plt.plot(numPeople, tr3.iloc[0]/tr3.iloc[1], 'o-', color="green", label=f"Vergleich ⌀-Wartezeiten TR3")
-    plt.plot(numPeople, tr4.iloc[0]/tr4.iloc[1], 'o-', color="purple", label=f"Vergleich ⌀-Wartezeiten TR4")
+    plt.plot(numPeople, tr4.iloc[0]/tr4.iloc[1], 'o-', color="orange", label=f"Vergleich ⌀-Wartezeiten TR4")
     plt.title("Vergleich der durchschnittlichen Wartezeiten der Testreihen 1, 2, 3 und 4")
     plt.legend(loc="best")
     plt.hlines(y=1, xmin=-100, xmax=600, linestyle="--", color="red")
